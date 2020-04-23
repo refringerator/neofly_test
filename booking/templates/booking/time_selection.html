@@ -1,0 +1,31 @@
+{% extends 'booking/main.html' %}
+
+{% block title %}Выбор времени{% endblock %}
+
+{% block body %}
+    <div class="container mt-3">
+        <h2>Выберите время</h2>
+        <br>
+    </div>
+<style>
+.btn{
+    margin-bottom: 5px;
+    }
+</style>
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column">
+                {% for slot in slots %}
+                    <a
+                            href="{% url 'payment_method_selection' time=slot.time %}"
+                            class="btn {{ slot.warning }} {{ slot.style }}"
+                            role="button">{{ slot.description }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

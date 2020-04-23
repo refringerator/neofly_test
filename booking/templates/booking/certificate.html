@@ -1,0 +1,26 @@
+{% extends 'booking/main.html' %}
+
+{% block title %}Выбор времени{% endblock %}
+
+{% block body %}
+    <div class="container mt-3">
+        <h2>Выбор сертификата</h2>
+        <br>
+    </div>
+
+<section class="section">
+    <div class="container">
+
+            <div class="column">
+                <form action="{% url 'order_confirmation' %}" method="POST">
+                    {% csrf_token %}
+                    {% for cert in cert_table.rows %}
+                              <button class="btn {{ slot.warning }} {{ slot.style }}" name="{{ slot.name }}">{{ cert.price }} {{ cert.cert_type }} {{ cert.flight_time }}</button>
+                    {% endfor %}
+                </form>
+            </div>
+
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'booking/main.html' %}
+
+{% block body %}
+    <style>
+        .btn {
+            margin-bottom: 5px;
+        }
+    </style>
+
+    <div class="container mt-3">
+        <h2>Выбор даты полета</h2>
+        <br>
+    </div>
+    <div class="container mt-3">
+        <div class="columns">
+            <button id="button_prev" type="button" class="btn btn-light">❮</button>
+            <span>{{ month_name }}</span>
+            <button id="button_next" type="button" class="btn btn-light"> ❯</button>
+        </div>
+    </div>
+    <section class="section">
+        <div class="container">
+            <div class="columns">
+                <div class="column">
+                    <form action="{% url 'time_selection' %}" method="POST">
+                        {% csrf_token %}
+                        <input id="date" name="date" type="hidden" value="{{ month }}">
+                        {% for week in booking_data %}
+                            <div class="buttons are-medium">
+                                {% for day in week %}
+                                    <a
+                                        href="{% url 'time_selection' %}{{ day.value }}"
+                                        class="btn {{ day.style }} {{ day.disabled }}"
+                                        role="button">{{ day.day }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+{% endblock %}
+
+{% block jscript %}
+    {{ month|json_script:"month" }}
+    <script>
+        let cur_month;
+        $(document).ready(function () {
+            cur_month = new Date(JSON.parse(document.getElementById('month').textContent));
+            $("#button_next").click(function () {
+                cur_month.setMonth(cur_month.getMonth() + 1);
+                window.location.href = "{% url 'date_selection' %}" + cur_month.toISOString().substr(0, 7);
+            });
+
+            $("#button_prev").click(function () {
+                cur_month.setMonth(cur_month.getMonth() - 1);
+                window.location.href = "{% url 'date_selection' %}" + cur_month.toISOString().substr(0, 7);
+            });
+        })
+    </script>
+{% endblock %}

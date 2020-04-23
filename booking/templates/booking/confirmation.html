@@ -1,0 +1,39 @@
+{% extends 'booking/main.html' %}
+
+{% block title %}Подтверждение заказа{% endblock %}
+
+{% block body %}
+    <div class="container mt-3">
+        <h2>Подтверждение заказа</h2>
+        <br>
+    </div>
+
+<div class="container">
+  <h2>Данные заказа</h2>
+{#  <p>The .table-hover class enables a hover state (grey background on mouse over) on table rows:</p>            #}
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Детали заказа</th>
+            <th>Сумма</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in details %}
+            <tr>
+                <td>{{ row.description }}</td>
+                <td>{{ row.price }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+        <tr>
+            <td>Итого</td>
+            <td>{{ total }}</td>
+        </tr>
+        </tfoot>
+    </table>
+    <button class="btn">Оплатить</button>
+</div>
+
+{% endblock %}

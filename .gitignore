@@ -1,0 +1,4 @@
+.DS_Store
+.idea
+/stories/
+db.sqlite3
