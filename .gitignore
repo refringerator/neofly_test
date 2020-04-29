@@ -3,3 +3,5 @@
 /stories/
 db.sqlite3
 neofly/.env
+__pycache__/
+tmp/

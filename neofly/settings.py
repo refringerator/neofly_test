@@ -126,6 +126,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 
+STATIC_ROOT = env('STATIC_ROOT')
 STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
