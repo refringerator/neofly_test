@@ -1,0 +1,47 @@
+<!-- Modal -->
+<div id="myModal" class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+       <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalCenterTitle">Данные заказа</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Необходимо ознакомиться с данными заказа, если все верно - нажать кнопку <i>Оплатить</i> </p>
+
+      <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Детали заказа</th>
+            <th>Сумма</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in details %}
+            <tr>
+                <td>{{ row.description }}</td>
+                <td>{{ row.price }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+        <tr>
+            <td><b>Итого</b></td>
+            <td><b>{{ total }}</b></td>
+        </tr>
+        </tfoot>
+    </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+         <a class="btn btn-primary" href="https://auth.robokassa.ru/Merchant/Index.aspx?{{ payment_params }}" role="button">Оплатить</a>
+
+      </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>

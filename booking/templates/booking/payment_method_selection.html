@@ -1,6 +1,7 @@
 {% extends 'booking/main.html' %}
 
 {% block body %}
+    <div id="my-modal-window"></div>
     <div class="container mt-3">
         <h2>Выбор способа оплаты</h2>
         <br>
@@ -62,7 +63,7 @@
                     </table>
                 </div>
                 <div>
-                    <a href="{% url 'order_confirmation' %}" class="btn btn-info" role="button">Перейти к оплате</a>
+                    <button id="checkout" class="btn btn-info">Перейти к оплате</button>
                 </div>
 
             </div>
@@ -77,6 +78,7 @@
                     totam rem aperiam.</p>
             </div>
         </div>
+
     </div>
 
 {% endblock %}
@@ -155,14 +157,35 @@
                 calc.button_click(this.id, this.innerText);
             });
 
+            $("#checkout").click(function () {
+                var data = { csrfmiddlewaretoken: CSRF_TOKEN, 'order': JSON.stringify(calc.tariffs)}
+                {#$("#my-modal-window").post("{% url 'order_confirmation' %}", data, )#}
+                var jqxhr = $.post("{% url 'order_confirmation' %}", data, function (ddd) {
+                    {#alert("success");#}
+                    $("#my-modal-window").html(ddd);
+                    $('#myModal').modal('show')
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+
+                    })
+                    .fail(function () {
+                        {#alert("error");#}
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+
+            });
+
             var tariff;
             var selector;
             for (tariff in calc.tariffs){
                 selector = "tr#" + calc.tariffs[tariff].id + ">.price";
-                console.log(selector);
                 $(selector).text(calc.tariffs[tariff].price.reduce((min, p) => p.pr < min ? p.pr : min, calc.tariffs[tariff].price[0].pr));
             }
         });
     </script>
+    <script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
 
 {% endblock %}

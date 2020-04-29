@@ -2,3 +2,4 @@
 .idea
 /stories/
 db.sqlite3
+neofly/.env

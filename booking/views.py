@@ -1,8 +1,12 @@
 import calendar
+
 from datetime import datetime
+
 from django.shortcuts import render, redirect
+from rest_framework.utils import json
 
 from .utils import *
+from .robokassa import *
 
 
 def index(request):
@@ -103,22 +107,50 @@ def payment_method_selection(request, time=None):
 
 def buy_certificate(request):
     certs = get_available_certificate_types(user_id=get_user_id(request))
-    cert_table = make_cert_table(certs)
+    head, rows = make_cert_table(certs)
 
     context = {
-        'cert_table': cert_table
+        'head': head,
+        'rows': rows,
     }
     return render(request, 'booking/certificate.html', context=context)
 
 
 def order_confirmation(request):
+    # проверяем, что залогинены
+
+    # потом запрос у 1с на правильность расчета суммы по параметрам
+
+    # потом сохраняем заказ в бд, присваиваем идентификатор
+    inv_id = 0
+
+    # если не ок, возвращаем ошибку
+    # если ок, отображаем шаблон с кнопкой оплаты
+
+    data = json.loads(request.POST['order'])
+    total = 0
+    details = []
+    is_cert = isinstance(data, list)
+    if is_cert:
+        values = data
+    else:
+        values = data.values()
+
+    for tariff_row in values:
+        row_total = tariff_row['total']
+        if row_total <= 0:
+            continue
+
+        item_name = 'Сертификат' if is_cert else 'Тариф'
+        description = f"{item_name} {tariff_row['name']} - {tariff_row['count']} мин."
+        details.append({'description': description, 'price': row_total})
+        total += row_total
+
+    payment_params = robokassa_get_param_str(total, inv_id)
 
     context = {
-        'total': 100500,
-        'details': [
-            {'description': 'Cosby sweater lomo jean shorts', 'price': 200},
-            {'description': 'Sapiente synth id assumenda', 'price': 300},
-            {'description': 'Cardigan craft beer seitan readymade velit', 'price': 500},
-        ]
+        'payment_params': payment_params,
+        'total': total,
+        'details': details,
     }
-    return render(request, 'booking/confirmation.html', context=context)
+    return render(request, 'booking/modal_confirmation.html', context=context)

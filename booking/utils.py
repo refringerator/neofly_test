@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import timedelta
 
 from django.conf import settings
@@ -55,14 +56,27 @@ def get_available_tariffs(slot_time, user_id):
 
 
 def make_cert_table(certs):
-    head = []
-    rows = []
+    fl_time = []
 
+    d = defaultdict(list)
     for cert_data in certs.availableCertificate:
-        rows.append({'cert_type': cert_data.certificateType, 'flight_time': cert_data.flightTime, 'price': cert_data.price})
+        d[cert_data.certificateType].append({'flight_time': cert_data.flightTime,
+                                             'price': cert_data.price,
+                                             'disabled': ''
+                                             })
+        fl_time.append(cert_data.flightTime)
 
+    fl_time.sort()
+    head = set(fl_time)
 
-    return {'head': head, 'rows': rows}
+    for key, value in d.items():
+        fts = set([v['flight_time'] for v in value])
+        for el in head - fts:
+            d[key].append({'flight_time': el, 'price': '-', 'disabled': 'disabled'})
+
+        d[key].sort(key=lambda element: element['flight_time'])
+
+    return head, dict(d)
 
 
 def get_user_id(request):

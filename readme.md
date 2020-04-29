@@ -736,6 +736,7 @@
     * django-debug-toolbar
     * djangorestframework
     * phone_login 
+    * [Django-environ](https://django-environ.readthedocs.io/en/latest/#django-environ)
 2. Nginx
 3. Javascript, JQuery
 4. Bootstrap 4

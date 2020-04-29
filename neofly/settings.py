@@ -1,16 +1,24 @@
-
 import os
+import environ
+
+env = environ.Env(
+    DEBUG=(bool, False),
+    ALLOWED_HOST=(str, '*')
+)
+
+# reading .env file
+environ.Env.read_env()
+
+# False if not in os.environ
+DEBUG = env('DEBUG')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
+# Raises django's ImproperlyConfigured exception if SECRET_KEY not in os.environ
+SECRET_KEY = env('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [env('ALLOWED_HOST')]
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
@@ -67,17 +75,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'neofly.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'read_default_file': os.environ['DATABASE_CONF'],
-        },
-    }
+    # read os.environ['DATABASE_URL'] and raises ImproperlyConfigured exception if not found
+    'default': env.db(),
+    'extra': env.db('SQLITE_URL', default='sqlite:////db.sqlite3')
 }
 
 
@@ -124,7 +125,6 @@ MEDIA_URL = '/media/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
-# print(STATIC_DIRS)
 
 STATIC_URL = '/static/'
 
@@ -142,24 +142,33 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # SOAP WS
-SOAP_WSDL = os.environ['SOAP_WSDL']
-WS_LOGIN = os.environ['WS_LOGIN']
-WS_PASS = os.environ['WS_PASS']
-WS_PROXY_LOGIN = os.environ['WS_LOGIN']
-WS_PROXY_PASS = os.environ['WS_PASS']
-WS_IGNORE_SSL = True
-WS_DEFAULT_USER_ID = 666
+SOAP_WSDL = env('SOAP_WSDL')
+WS_LOGIN = env('WS_LOGIN')
+WS_PASS = env('WS_PASS')
+WS_PROXY_LOGIN = env('WS_PROXY_LOGIN')
+WS_PROXY_PASS = env('WS_PROXY_PASS')
+WS_IGNORE_SSL = env('WS_IGNORE_SSL')
+WS_DEFAULT_USER_ID = env.int('WS_DEFAULT_USER_ID')
 
 # SENDSMS
 SENDSMS_BACKEND = 'sendsms.backends.console.SmsBackend'
-SENDSMS_FROM_NUMBER = "+XXxxxxxxxxxx"
-SENDSMS_ACCOUNT_SID = 'ACXXXXXXXXXXXXXX'
-SENDSMS_AUTH_TOKEN = 'xxxxxxxx'
+SENDSMS_FROM_NUMBER = env('SENDSMS_FROM_NUMBER')
+SENDSMS_ACCOUNT_SID = env('SENDSMS_ACCOUNT_SID')
+SENDSMS_AUTH_TOKEN = env('SENDSMS_AUTH_TOKEN')
 
 # PHONE_LOGIN
-PHONE_LOGIN_ATTEMPTS = 10
-PHONE_LOGIN_OTP_LENGTH = 6
-PHONE_LOGIN_OTP_HASH_ALGORITHM = 'sha256'
-PHONE_LOGIN_DEBUG = True  # will include otp in generate response, default is False.
+PHONE_LOGIN_ATTEMPTS = env('PHONE_LOGIN_ATTEMPTS')
+PHONE_LOGIN_OTP_LENGTH = env('PHONE_LOGIN_OTP_LENGTH')
+PHONE_LOGIN_OTP_HASH_ALGORITHM = env('PHONE_LOGIN_OTP_HASH_ALGORITHM')
+PHONE_LOGIN_DEBUG = env('PHONE_LOGIN_DEBUG')
+
+# ROBOKASSA
+ROBOKASSA_SHOP = env('ROBOKASSA_SHOP')
+ROBOKASSA_PASS1 = env('ROBOKASSA_PASS1')
+ROBOKASSA_PASS2 = env('ROBOKASSA_PASS2')
+
+ROBOKASSA_IN_TESTING = env.bool('ROBOKASSA_IN_TESTING')
+ROBOKASSA_TEST_PASS1 = env('ROBOKASSA_TEST_PASS1')
+ROBOKASSA_TEST_PASS2 = env('ROBOKASSA_TEST_PASS2')
 
 AUTH_USER_MODEL = 'phone_login.CustomUser'
