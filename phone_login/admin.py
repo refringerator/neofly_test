@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import PhoneToken
+from django.contrib.auth import get_user_model
 
 
 class PhoneTokenAdmin(admin.ModelAdmin):
@@ -11,3 +12,4 @@ class PhoneTokenAdmin(admin.ModelAdmin):
 
 
 admin.site.register(PhoneToken, PhoneTokenAdmin)
+admin.site.register(get_user_model())

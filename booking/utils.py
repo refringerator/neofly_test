@@ -81,3 +81,53 @@ def make_cert_table(certs):
 
 def get_user_id(request):
     return request.user.id or settings.WS_DEFAULT_USER_ID
+
+
+def create_order(user_id, is_cert, data, booking_date):
+    client = init_soap_client()
+    details = []
+
+    if is_cert:
+        order_data = {
+            'newCertificates':
+                {
+                    'newCertificate': [
+                        {
+                            'certificateType': x['name'],
+                            'flightTime': x['count'],
+                            'price': x['total']
+                        }
+                        for x in data]}
+
+        }
+
+        total = sum(item['price'] for item in order_data['newCertificates']['newCertificate'])
+    else:
+        values = data.values()
+        order_data = {
+            'flightTime':
+                {'bookingDate': str(booking_date).replace('"', ''),
+                 'tariffRecords':
+                    {'record': [
+                        {'tariffId': x['id'],
+                         'minutes': x['count'],
+                         'sum': x['total']
+                         }
+                        for x in values if x['count']
+                    ]}
+                }
+        }
+
+        total = sum(item['sum'] for item in order_data['flightTime']['tariffRecords']['record'])
+
+    order_data['total'] = total
+    order_data['UserId'] = user_id
+    res = client.service.createOrder(Data=order_data)
+
+    return res.invoiceId
+
+
+def confirm_order(invoice_id, total, user_id):
+    client = init_soap_client()
+    res = client.service.confirmOrder(invoiceId=invoice_id, UserId=user_id, total=total)
+    return res

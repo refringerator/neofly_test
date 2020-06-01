@@ -11,5 +11,9 @@ urlpatterns = [
     path('payment_method_selection/<str:time>', views.payment_method_selection, name='payment_method_selection'),
     path('buy_certificate/', views.buy_certificate, name='buy_certificate'),
     path('confirmation/', views.order_confirmation, name='order_confirmation'),
+    path('success_payment/<str:url_type>/', views.success_payment, name='success_payment'),
+
+
+
 
 ]

@@ -745,7 +745,11 @@
 ## Что сделано
 #### Изменена базовая модель пользователя
 Для проекта встроеная пользовательская модель django не подходит, так как неободима идентификация пользователя по номеру телефона. На первый взгля для этих целей неплохо подошла
-модель пользовтеля основанная на абстрактной модели из [django-phone-login](https://github.com/wejhink/django-phone-login). К тому же Django Phone Login позволяет логиниться и регистрироваться по номеру телефона. Не требует запоминания пароля от пользователей.
+модель пользователя `phone_login/models.py #CustomUser(PhoneNumberUser)` основанная на абстрактной модели `PhoneNumberUser` из [django-phone-login](https://github.com/wejhink/django-phone-login). К тому же Django Phone Login позволяет логиниться и регистрироваться по номеру телефона. Не требует запоминания пароля от пользователей.
+Добавляем в настройки приложения строку, чтобы использовать другую модель пользователя.
+```
+    AUTH_USER_MODEL = 'phone_login.CustomUser'
+```
 
 ##### Порядок работы
 1. Пользователь вводит `номер телефона` и отправляет запрос на генерацию `секретного кода`
@@ -756,11 +760,69 @@
 * https://docs.djangoproject.com/en/3.0/topics/auth/customizing/
 
 #### Реализован вызов soap-сервиса информационной системы
-* получение данных
-* их преобразование
+Для вызова soap сервиса используется [Zeep: Python SOAP client](https://docs.python-zeep.org/en/master/)
+Вызовы сервиса расположены в `booking/utils.py`
+
+Сначала создаем объект клиент, указывая настройки подключения
+```
+def init_soap_client():
+    session = Session()
+    session.auth = HTTPBasicAuth(settings.WS_PROXY_LOGIN, settings.WS_PROXY_PASS)
+    session.verify = not settings.WS_IGNORE_SSL
+
+    client = zeep.Client(wsdl=settings.SOAP_WSDL,
+                         wsse=UsernameToken(settings.WS_LOGIN, settings.WS_PASS),
+                         transport=Transport(session=session))
+    return client
+```
+
+Потом вызываем необходимый метод, для получения данных. Например, получение всех доступных дат в месяце
+```
+def get_available_dates(date_in_month, user_id):
+    client = init_soap_client()
+    res = client.service.getAvailableDates(Month=date_in_month, UserId=user_id)
+    return res.Items
+```
+
+Вообще, SOAP основан на обмене XML-сообщениями. Хотя библиотека zeep и преобразовывает xml в объектное представлление, для отображения полученных данных на странице, их необходимо будет преобразовать.
+Для этого написаны дополнительные функции, на второй остановимся чуть позже.
+```
+def available_dates_to_dict(dates):
+    return {item.startDate: item.minutesAvailable for item in dates.availableElement}
+
+
+def make_cert_table(certs):
+    fl_time = []
+
+    d = defaultdict(list)
+    for cert_data in certs.availableCertificate:
+        d[cert_data.certificateType].append({'flight_time': cert_data.flightTime,
+                                             'price': cert_data.price,
+                                             'disabled': ''
+                                             })
+        fl_time.append(cert_data.flightTime)
+
+    fl_time.sort()
+    head = set(fl_time)
+
+    for key, value in d.items():
+        fts = set([v['flight_time'] for v in value])
+        for el in head - fts:
+            d[key].append({'flight_time': el, 'price': '-', 'disabled': 'disabled'})
+
+        d[key].sort(key=lambda element: element['flight_time'])
+
+    return head, dict(d)
+```
 
 #### Набросаны шаблоны старниц
-Сделан минимальный набор шагов (выбор даты - выбор времени - выбор тарифа)
+Сделан минимальный набор шагов (выбор даты - выбор времени - выбор тарифа - переход на страницу оплаты)
+и (выбор доступных сертификатов - переход на страницу оплаты)
+
+##### Выбор даты полета
+Необходимо было отобразить календарь с доступными датами и возможностью выбора месяца
+Даты получаем через SOAP-сервис, вызывая метод `getAvailableDates`, 
+
 
 #### В зачаточном состоянии rest api
 Позволяет получать список пользователей, а также добоавлять

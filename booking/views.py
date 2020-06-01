@@ -1,10 +1,13 @@
 import calendar
-
 from datetime import datetime
 
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
+
 from rest_framework.utils import json
 
+from .models import *
 from .utils import *
 from .robokassa import *
 
@@ -78,6 +81,7 @@ def time_selection(request, year=None, month=None, day=None):
     return render(request, 'booking/time_selection.html', context)
 
 
+@login_required(login_url='login')
 def payment_method_selection(request, time=None):
     try:
         date = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S')
@@ -87,24 +91,30 @@ def payment_method_selection(request, time=None):
     res = get_available_tariffs(slot_time=date, user_id=get_user_id(request))
     minutes_available = res.minutesAvailable
     tariffs = {}
-    for el in res.Items.availableTariff:
-        tariffs[el.tariffId] = {
+    for element in res.Items.availableTariff:
+        tariffs[element.tariffId] = {
                 'count': 0,
                 'total': 0,
-                'id': el.tariffId,
-                'name': el.name,
-                'step': el.step,
-                'min_time': el.minTime,
-                'price': [{'from': it['from'], 'to': it.to, 'pr': it.price} for it in el.tariffDetails.detail]
+                'id': element.tariffId,
+                'name': element.name,
+                'step': element.step,
+                'min_time': element.minTime,
+                'price': [{'from': it['from'],
+                           'to': it.to,
+                           'pr': it.price
+                           }
+                          for it in element.tariffDetails.detail]
             }
 
     context = {
         'tariffs': tariffs,
         'minutes_available': minutes_available,
+        'booking_date': time,
     }
     return render(request, 'booking/payment_method_selection.html', context)
 
 
+@login_required(login_url='login')
 def buy_certificate(request):
     certs = get_available_certificate_types(user_id=get_user_id(request))
     head, rows = make_cert_table(certs)
@@ -116,25 +126,18 @@ def buy_certificate(request):
     return render(request, 'booking/certificate.html', context=context)
 
 
+@login_required(login_url='login')
 def order_confirmation(request):
-    # проверяем, что залогинены
-
-    # потом запрос у 1с на правильность расчета суммы по параметрам
-
-    # потом сохраняем заказ в бд, присваиваем идентификатор
-    inv_id = 0
-
-    # если не ок, возвращаем ошибку
-    # если ок, отображаем шаблон с кнопкой оплаты
-
     data = json.loads(request.POST['order'])
     total = 0
     details = []
     is_cert = isinstance(data, list)
     if is_cert:
         values = data
+        booking_date = None
     else:
         values = data.values()
+        booking_date = request.POST['booking_date']
 
     for tariff_row in values:
         row_total = tariff_row['total']
@@ -146,11 +149,43 @@ def order_confirmation(request):
         details.append({'description': description, 'price': row_total})
         total += row_total
 
-    payment_params = robokassa_get_param_str(total, inv_id)
+    # потом запрос у 1с на правильность расчета суммы по параметрам
+    order_id = create_order(user_id=get_user_id(request), is_cert=is_cert, data=data, booking_date=booking_date)
 
+    # потом сохраняем заказ в бд, присваиваем идентификатор
+    order = Order.objects.create(sum=total,
+                                 order_id=order_id,
+                                 order_data=request.POST['order'],
+                                 owner=request.user,
+                                 status='new',
+                                 type='certificate' if is_cert else 'flightTime')
+
+    payment_params = robokassa_get_param_str(total, order.id)
+
+    # мб потом добавить проверку, чтобы заказы не дублировались при закрытии/открытии окошка
     context = {
         'payment_params': payment_params,
         'total': total,
         'details': details,
     }
     return render(request, 'booking/modal_confirmation.html', context=context)
+
+
+def success_payment(request, url_type):
+    print('Payment result: ', url_type)
+
+    # Ошибка оплаты, перенаправляем домой
+    if url_type == 'fail':
+        context = {
+            'title': 'Ошибка при оплате заказа!',
+            'message': 'При оплате заказа произошла ошибка',
+        }
+        return render(request, 'booking/info.html', context=context)
+
+    # Успешная оплата
+    robokassa_check_crc(request, url_type)
+    if url_type == 'result':  # подтверждение с кассы
+        return HttpResponse('OK')
+
+    return redirect('home')  # либо с пользователя
+

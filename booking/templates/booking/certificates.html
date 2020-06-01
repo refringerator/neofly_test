@@ -1,0 +1,40 @@
+{% extends 'booking/main.html' %}
+
+{% block title %}Сертификаты{% endblock %}
+
+{% block body %}
+    <div class="container mt-3">
+        <h2>Сертификаты</h2>
+        <br>
+    </div>
+<style>
+.btn{
+    margin-bottom: 5px;
+    }
+</style>
+
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Категория</th>
+                        <th>Полетное время</th>
+                        <th>Номер сертификата</th>
+                    </tr>
+
+                    {% for cert in certificates %}
+                        <tr>
+                            <td>{{ cert.cert_type }}</td>
+                            <td>{{ cert.flight_time }}</td>
+                            <td>{{ cert.cert_number }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

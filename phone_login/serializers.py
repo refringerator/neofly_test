@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from phonenumber_field.formfields import PhoneNumberField
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from django.conf import settings
 
 from .models import PhoneToken
 
@@ -13,7 +14,7 @@ class PhoneTokenCreateSerializer(ModelSerializer):
 
     class Meta:
         model = PhoneToken
-        fields = ('pk', 'phone_number')
+        fields = ('pk', 'phone_number') if not settings.PHONE_LOGIN_DEBUG else ('pk', 'phone_number', 'otp')
 
 
 class PhoneTokenUser(ModelSerializer):

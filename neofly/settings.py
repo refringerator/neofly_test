@@ -34,11 +34,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'debug_toolbar',
-    'phone_login',
     'rest_framework',
     'rest_framework.authtoken',
 
+    'phone_login',
     'booking',
+    'accounts',
     'api',
 ]
 
@@ -59,8 +60,7 @@ ROOT_URLCONF = 'neofly.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -152,16 +152,16 @@ WS_IGNORE_SSL = env('WS_IGNORE_SSL')
 WS_DEFAULT_USER_ID = env.int('WS_DEFAULT_USER_ID')
 
 # SENDSMS
-SENDSMS_BACKEND = 'sendsms.backends.console.SmsBackend'
+SENDSMS_BACKEND = env('SENDSMS_BACKEND')
 SENDSMS_FROM_NUMBER = env('SENDSMS_FROM_NUMBER')
 SENDSMS_ACCOUNT_SID = env('SENDSMS_ACCOUNT_SID')
 SENDSMS_AUTH_TOKEN = env('SENDSMS_AUTH_TOKEN')
 
 # PHONE_LOGIN
-PHONE_LOGIN_ATTEMPTS = env('PHONE_LOGIN_ATTEMPTS')
-PHONE_LOGIN_OTP_LENGTH = env('PHONE_LOGIN_OTP_LENGTH')
+PHONE_LOGIN_ATTEMPTS = env.int('PHONE_LOGIN_ATTEMPTS')
+PHONE_LOGIN_OTP_LENGTH = env.int('PHONE_LOGIN_OTP_LENGTH')
 PHONE_LOGIN_OTP_HASH_ALGORITHM = env('PHONE_LOGIN_OTP_HASH_ALGORITHM')
-PHONE_LOGIN_DEBUG = env('PHONE_LOGIN_DEBUG')
+PHONE_LOGIN_DEBUG = env.bool('PHONE_LOGIN_DEBUG')
 
 # ROBOKASSA
 ROBOKASSA_SHOP = env('ROBOKASSA_SHOP')

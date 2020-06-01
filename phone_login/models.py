@@ -26,7 +26,7 @@ class PhoneNumberUserManager(BaseUserManager):
             raise ValueError('The given username must be set')
         email = self.normalize_email(email)
         username = self.model.normalize_username(username)
-        # phone_number = self.model.normalize_username(phone_number)
+
         user = self.model(
             username=username, email=email, phone_number=phone_number,
             **extra_fields
@@ -117,5 +117,8 @@ class PhoneToken(models.Model):
 
 
 class CustomUser(PhoneNumberUser):
+    def __str__(self):
+        return str(self.phone_number)
+
     USERNAME_FIELD = 'phone_number'
-    REQUIRED_FIELDS = ['email']
+    REQUIRED_FIELDS = ['username', 'email']

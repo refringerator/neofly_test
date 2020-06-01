@@ -1,0 +1,40 @@
+{% extends 'booking/main.html' %}
+
+{% block title %}Заказы{% endblock %}
+
+{% block body %}
+    <div class="container mt-3">
+        <h2>Заказы</h2>
+        <br>
+    </div>
+<style>
+.btn{
+    margin-bottom: 5px;
+    }
+</style>
+
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Номер</th>
+                        <th>Дата заказа</th>
+                        <th>Сумма</th>
+                    </tr>
+
+                {% for order in orders %}
+                    <tr>
+                        <td>{{ order.order_id }}</td>
+                        <td>{{ order.date_created }}</td>
+                        <td>{{ order.sum }}</td>
+                    </tr>
+                {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

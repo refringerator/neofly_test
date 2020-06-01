@@ -36,45 +36,48 @@ class PhoneBackend(ModelBackend):
             password = extra_fields.get('password')
         else:
             password = password
+
         phone_number = phone_token.phone_number
         user = self.user_model.objects.create_user(
             username=username,
             password=password,
-            phone_number=phone_number
+            phone_number=phone_number,
+            **extra_fields
         )
         return user
 
     def authenticate(self, request, pk=None, otp=None, **extra_fields):
-
-        # 1. Validating the PhoneToken with PK and OTP.
-        # 2. Check if phone_token and otp are same, within the given time range
-        timestamp_difference = datetime.datetime.now() - datetime.timedelta(
-            minutes=getattr(settings, 'PHONE_LOGIN_MINUTES', 10)
-        )
-        try:
-
-            phone_token = PhoneToken.objects.get(
-                pk=pk,
-                otp=otp,
-                used=False,
-                timestamp__gte=timestamp_difference
+        if pk:
+            # 1. Validating the PhoneToken with PK and OTP.
+            # 2. Check if phone_token and otp are same, within the given time range
+            timestamp_difference = datetime.datetime.now() - datetime.timedelta(
+                minutes=getattr(settings, 'PHONE_LOGIN_MINUTES', 10)
             )
-        except PhoneToken.DoesNotExist:
-            phone_token = PhoneToken.objects.get(pk=pk)
+            try:
+
+                phone_token = PhoneToken.objects.get(
+                    pk=pk,
+                    otp=otp,
+                    used=False,
+                    timestamp__gte=timestamp_difference
+                )
+            except PhoneToken.DoesNotExist:
+                phone_token = PhoneToken.objects.get(pk=pk)
+                phone_token.attempts = phone_token.attempts + 1
+                phone_token.save()
+                raise PhoneToken.DoesNotExist
+
+            # 3. Create new user if he doesn't exist. But, if he exists login.
+            user = self.user_model.objects.filter(
+                phone_number=phone_token.phone_number
+            ).first()
+            if not user:
+                user = self.create_user(
+                    phone_token=phone_token,
+                    **extra_fields
+                )
+            phone_token.used = True
             phone_token.attempts = phone_token.attempts + 1
             phone_token.save()
-            raise PhoneToken.DoesNotExist
-
-        # 3. Create new user if he doesn't exist. But, if he exists login.
-        user = self.user_model.objects.filter(
-            phone_number=phone_token.phone_number
-        ).first()
-        if not user:
-            user = self.create_user(
-                phone_token=phone_token,
-                **extra_fields
-            )
-        phone_token.used = True
-        phone_token.attempts = phone_token.attempts + 1
-        phone_token.save()
-        return user
+            return user
+        return None

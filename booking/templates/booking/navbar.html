@@ -16,8 +16,22 @@
                 <a class="nav-link" href="{% url 'buy_certificate' %}">Купить сертификат</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'buy_certificate' %}">Мои сертификаты</a>
+                <a class="nav-link" href="{% url 'certificates' %}">Сертификаты</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'flights' %}">Полеты</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'orders' %}">Заказы</a>
             </li>
         </ul>
     </div>
+
+    {% if user.is_authenticated %}
+        <span>Hello, {{ request.user }}</span>
+        <span><a href="{% url 'logout' %}">Logout</a></span>
+    {% else %}
+        <span><a href="{% url 'login' %}">Log In</a></span>
+        <span><a href="{% url 'register' %}">Register</a></span>
+    {% endif %}
 </nav>
