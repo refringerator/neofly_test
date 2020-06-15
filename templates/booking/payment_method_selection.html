@@ -1,0 +1,364 @@
+{% extends 'booking/main.html' %}
+
+{% block body %}
+    <div id="my-modal-window"></div>
+    <div class="container mt-3">
+        <h2>Выбор способа оплаты</h2>
+        <br>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#online">Оплатить online</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#certificate">Оплатить сертификатом</a>
+            </li>
+            {% if request.user.is_deposit_available %}
+            <li class="nav-item">
+                <a class="nav-link" href="#deposit">Оплатить с депозита</a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div id="online" class="container tab-pane active"><br>
+                <h3>Выберите тариф и его продолжительность</h3>
+                <div class="container">
+                    <table class="table table-borderless table-striped">
+                        <tbody>
+                        {% for tariff in tariffs.values %}
+                            <tr id="{{ tariff.id }}" style="width: 25%">
+                                <td id="name_{{ tariff.id }}">{{ tariff.name }}</td>
+                                <td style="width: 10%">
+                                    <button id="dec_{{ tariff.id }}" class="btn btn-outline-success btn_cntrl">-
+                                    </button>
+                                </td>
+                                <td class="time" style="width: 5%">0</td>
+                                <td style="width: 10%">
+                                    <button id="inc_{{ tariff.id }}" class="btn btn-outline-success btn_cntrl">+
+                                    </button>
+                                </td>
+
+                                <td class="text-nowrap" style="width: 50%">
+                                    <span> мин. по </span>
+                                    <span class="price">0</span>
+                                    <span> р. за </span>
+                                    <span class="total">0</span>
+                                    <span> р. из </span>
+                                    <span class="minutes_available">{{ minutes_available }}</span>
+                                    <span> мин.</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td colspan="4" align="left">
+                                <span id="min_left"></span>
+                            </td>
+                            <td align="left">
+                                <span>Итого к оплате: </span><span id="pay_total">0</span>
+                            </td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div>
+                    <button id="checkout" class="btn btn-info">Перейти к оплате</button>
+                </div>
+
+            </div>
+            <div id="certificate" class="container tab-pane fade"><br>
+                <h3>Оплатить сертификатом</h3>
+                <p>Введите номер сертификата, который хотите использовать</p>
+                <input type="text" id="cert_number" name="cert_number">
+                <button id="cert_add" class="btn btn-info">+</button>
+                <div class="container">
+                    <ul id="bucket" class="list-group">
+                    </ul>
+                </div>
+                <br><br>
+                <div>
+                    <button id="cert_checkout" class="btn btn-info">Забронировать</button>
+                </div>
+            </div>
+
+            {% if request.user.is_deposit_available %}
+            <div id="deposit" class="container tab-pane fade"><br>
+                <h3 id="deposit_minutes">На депозите</h3>
+                <p>Выберите продолжительность полета</p>
+                <table class="table table-borderless table-striped">
+                    <tbody>
+                    <tr style="width: 25%">
+                        <td >Полет по депозиту</td>
+                        <td style="width: 10%">
+                            <button id="deposit_dec" class="btn btn-outline-success deposit_button">-</button>
+                        </td>
+                        <td id="deposit_selected" style="width: 5%">0</td>
+                        <td style="width: 10%">
+                            <button id="deposit_inc" class="btn btn-outline-success deposit_button">+</button>
+                        </td>
+
+                        <td class="text-nowrap" style="width: 50%">
+                            <span> мин. из </span>
+                            <span class="deposit_minutes_available">{{ minutes_available }}</span>
+                            <span> мин.</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <br><br>
+                <div>
+                    <button id="deposit_checkout" class="btn btn-info">Забронировать</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block jscript %}
+    {{ tariffs|json_script:"tariffs" }}
+    {{ minutes_available|json_script:"total_minutes_available" }}
+    {{ booking_date|json_script:"booking_date" }}
+{#    {{ request.user.is_deposit_available|json_script:"deposit_available" }}#}
+    {{ deposit_minutes|json_script:"deposit_minutes_available" }}
+
+    <script>
+        calc = {
+            total_minutes_available: JSON.parse(document.getElementById('total_minutes_available').textContent),
+            total_minutes: 0,
+            sum_total: 0,
+            minutes_available: JSON.parse(document.getElementById('total_minutes_available').textContent),
+            tariffs: JSON.parse(document.getElementById('tariffs').textContent),
+
+            // сертификаты
+            num: 0, // последний номер добавленного сертификата
+            certs: [],
+
+            // депозит
+            deposit_selected: 0,
+            //deposit_available: JSON.parse(document.getElementById('deposit_available').textContent),
+            deposit_minutes_available: JSON.parse(document.getElementById('deposit_minutes_available').textContent)
+
+
+        };
+        calc.get_price = function(tariff_id, count){
+            let row;
+            for(row of calc.tariffs[tariff_id].price){
+                if(count>=row.from && count<=row.to){
+                    return row.pr;
+                }
+            }
+            return 0;
+        }
+
+        calc.button_click = function(id, button_text){
+            id = id.replace('dec_', '').replace('inc_', '');
+            let t_data = calc.tariffs[id];
+            let direction = (button_text === '+') ? 1: -1;
+
+            let offset =  t_data.step * direction;
+            if(t_data.count === 0 && direction === 1){
+                offset = t_data.min_time;
+            }
+            else if(t_data.count === 0 && direction === -1){
+                return;
+            }
+            else if(t_data.count + offset < t_data.min_time){
+                offset = -t_data.count;
+            }
+
+            // limits
+            if(calc.total_minutes + offset > calc.total_minutes_available){
+                return;
+            }
+
+            t_data.count += offset;
+            calc.total_minutes += offset;
+
+            let price = calc.get_price(id, t_data.count);
+            t_data.total = price * t_data.count;
+            calc.total = Object.keys(calc.tariffs).reduce(
+                function (prev, key) {
+                    return prev + calc.tariffs[key].total;
+                }, 0
+            );
+
+            $("tr#" + id + " .price").text(price);
+            $("tr#" + id + " .time").text(t_data.count);
+            $("tr#" + id + " .total").text(t_data.total);
+            let total_left = calc.total_minutes_available - calc.total_minutes;
+            $(".minutes_available").text(total_left);
+            $("#pay_total").text(calc.sum_total);
+            $("#min_left").text(calc.total_minutes.toString() + ' из ' + calc.total_minutes_available.toString() + ' мин.');
+            $("#pay_total").text(calc.total);
+        }
+
+        calc.deposit_click = function(button_text) {
+            let offset = (button_text === '+') ? 1: -1;
+            let max = Math.min(calc.deposit_minutes_available, calc.total_minutes_available);
+
+            if(calc.deposit_selected + offset > max || calc.deposit_selected + offset < 0){
+                return;
+            }
+
+            calc.deposit_selected += offset;
+            $("#deposit_selected").text(calc.deposit_selected);
+        }
+
+        $(document).ready(function () {
+            $(".nav-tabs a").click(function () {
+                $(this).tab('show');
+            });
+
+            $(".btn_cntrl").click(function () {
+                calc.button_click(this.id, this.innerText);
+            });
+
+            {# ДЕПОЗИТНЫЕ ДЕЛИШКИ #}
+            $("#deposit_minutes").text(`На депозите ${calc.deposit_minutes_available} мин.`);
+            $(".deposit_button").click(function () {
+                calc.deposit_click(this.innerText);
+            });
+
+
+            {# ОПЛАТА ПО ДЕПОЗИТУ #}
+            $("#deposit_checkout").click(function () {
+                var data = {
+                    csrfmiddlewaretoken: CSRF_TOKEN,
+                    'order': JSON.stringify({'deposit_selected': calc.deposit_selected}),
+                    'booking_date': document.getElementById('booking_date').textContent,
+                    'order_type': 'flight_deposit'
+                }
+                var jqxhr = $.post("{% url 'order_confirmation' %}", data, function (ddd) {
+                    {#alert("success");#}
+                    $("#my-modal-window").html(ddd);
+                    $('#myModal').modal('show')
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+
+                    })
+                    .fail(function () {
+                        {#alert("error");#}
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+
+            });
+
+            {# ОПЛАТА ПОЛЕТНЫМ ВРЕМЕНЕМ #}
+            $("#checkout").click(function () {
+                var data = {
+                    csrfmiddlewaretoken: CSRF_TOKEN,
+                    'order': JSON.stringify(calc.tariffs),
+                    'booking_date': document.getElementById('booking_date').textContent,
+                    'order_type': 'buy_tariff',
+                }
+                {#$("#my-modal-window").post("{% url 'order_confirmation' %}", data, )#}
+                var jqxhr = $.post("{% url 'order_confirmation' %}", data, function (ddd) {
+                    {#alert("success");#}
+                    $("#my-modal-window").html(ddd);
+                    $('#myModal').modal('show')
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+
+                    })
+                    .fail(function () {
+                        {#alert("error");#}
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+
+            });
+
+            {# ОПЛАТА СЕРТИФИКАТОМ #}
+            $("#cert_checkout").click(function () {
+                var data = {
+                    csrfmiddlewaretoken: CSRF_TOKEN,
+                    'order': JSON.stringify(calc.certs),
+                    'booking_date': document.getElementById('booking_date').textContent,
+                    'order_type': 'flight_certificate'
+                }
+                var jqxhr = $.post("{% url 'order_confirmation' %}", data, function (ddd) {
+                    {#alert("success");#}
+                    $("#my-modal-window").html(ddd);
+                    $('#myModal').modal('show')
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+
+                    })
+                    .fail(function () {
+                        {#alert("error");#}
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+
+            });
+
+            {# ДОБАВЛЕНИЕ СЕРТИФИКАТОВ #}
+            $("#cert_add").click(function () {
+                var new_number = $("#cert_number").val()
+                $("#cert_number").val("")
+                for (var i in calc.certs) {
+                    if (calc.certs[i].number == new_number) {
+                        console.log('Already exist in list');
+                        return;
+                        break;
+                    }
+                }
+
+                var data = {
+                    csrfmiddlewaretoken: CSRF_TOKEN,
+                    'cert_number': new_number
+                }
+
+                var jqxhr = $.post("{% url 'cert_check' %}", data, function (ddd) {
+                    {#alert("success");#}
+                    if (ddd['status'] == 'ok'){
+
+                        calc.num += 1;
+                        calc.certs.push({
+                            id: calc.num,
+                            number: ddd['number'],
+                            flightTime: ddd['flightTime'],
+                            certificateType: ddd['certificateType']
+                        });
+
+                        $("#bucket").append(`<li id="li-${calc.num}" class="list-group-item">${ddd['certificateType']} - ${ddd['number']} ${ddd['flightTime']} мин.<button id="del-li-${calc.num}" type="button" class="ml-2 mb-1 close">&times;</button></li>`);
+                    }
+
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+                    })
+                    .fail(function () {
+                        {#alert("error");#}
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+
+            });
+
+            var tariff;
+            var selector;
+            for (tariff in calc.tariffs){
+                selector = "tr#" + calc.tariffs[tariff].id + ">.price";
+                $(selector).text(calc.tariffs[tariff].price.reduce((min, p) => p.pr < min ? p.pr : min, calc.tariffs[tariff].price[0].pr));
+            }
+        });
+    </script>
+    <script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
+
+{% endblock %}

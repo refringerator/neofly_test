@@ -1,8 +1,48 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from booking.models import Certificate, Flights
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = 'id', 'email', 'phone_number', 'first_name', 'last_name'
+        fields = ['id', 'email', 'phone_number',
+                  'first_name', 'last_name',
+                  'is_deposit_available', 'deposit_minutes']
+
+    def update(self, instance, validated_data):
+        instance.email = validated_data.get('email', instance.email)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.is_deposit_available = validated_data.get('is_deposit_available', instance.is_deposit_available)
+        instance.deposit_minutes = validated_data.get('deposit_minutes', instance.deposit_minutes)
+
+        instance.save()
+        return instance
+
+
+class CertificateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Certificate
+        fields = ['id', 'cert_number', 'cert_type', 'is_used']
+
+    def update(self, instance, validated_data):
+        instance.is_used = validated_data.get('is_used', instance.is_used)
+
+        instance.save()
+        return instance
+
+
+class FlightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Flights
+        fields = ['is_used', 'flight_date', 'status']
+
+    def update(self, instance, validated_data):
+        instance.is_used = validated_data.get('is_used', instance.is_used)
+        instance.flight_date = validated_data.get('flight_date', instance.flight_date)
+        instance.status = validated_data.get('status', instance.status)
+
+        instance.save()
+        return instance

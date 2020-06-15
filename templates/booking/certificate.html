@@ -102,7 +102,12 @@
             });
 
             $("#checkout").click(function () {
-                var data = { csrfmiddlewaretoken: CSRF_TOKEN, 'order': JSON.stringify(calc.cart)}
+                var data = {
+                    csrfmiddlewaretoken: CSRF_TOKEN,
+                    'order': JSON.stringify(calc.cart),
+                    'order_type': 'buy_certificate'
+                }
+
                 var jqxhr = $.post("{% url 'order_confirmation' %}", data, function (ddd) {
                     {#alert("success");#}
                     $("#my-modal-window").html(ddd);

@@ -58,6 +58,8 @@ class PhoneNumberUserManager(BaseUserManager):
 
 class PhoneNumberUser(AbstractUser):
     phone_number = PhoneNumberField(unique=True)
+    is_deposit_available = models.BooleanField(default=False)
+    deposit_minutes = models.IntegerField(default=0)
     objects = PhoneNumberUserManager()
 
     class Meta:

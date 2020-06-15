@@ -133,7 +133,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-    )
+    ),
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    # ]
 }
 
 AUTHENTICATION_BACKENDS = [
@@ -141,6 +144,10 @@ AUTHENTICATION_BACKENDS = [
     'phone_login.backends.phone_backend.PhoneBackend',
 
 ]
+
+LOGIN_REDIRECT_URL = 'home'
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
 
 # SOAP WS
 SOAP_WSDL = env('SOAP_WSDL')
@@ -173,3 +180,13 @@ ROBOKASSA_TEST_PASS1 = env('ROBOKASSA_TEST_PASS1')
 ROBOKASSA_TEST_PASS2 = env('ROBOKASSA_TEST_PASS2')
 
 AUTH_USER_MODEL = 'phone_login.CustomUser'
+
+
+# CELERY STUFF
+BROKER_URL = 'redis://localhost:6379'
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE

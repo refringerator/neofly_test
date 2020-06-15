@@ -8,6 +8,8 @@ from django.contrib.auth.backends import ModelBackend
 from ..models import PhoneToken
 from ..utils import model_field_attr
 
+from accounts.tasks import update_users_info
+
 
 class PhoneBackend(ModelBackend):
     def __init__(self, *args, **kwargs):
@@ -76,6 +78,9 @@ class PhoneBackend(ModelBackend):
                     phone_token=phone_token,
                     **extra_fields
                 )
+                # задача подтянуть данные из 1с
+                update_users_info.delay(user_id=user.id)
+
             phone_token.used = True
             phone_token.attempts = phone_token.attempts + 1
             phone_token.save()

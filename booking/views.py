@@ -2,11 +2,13 @@ import calendar
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from rest_framework.utils import json
-
+from accounts.views import additional_info_page
 from .models import *
 from .utils import *
 from .robokassa import *
@@ -17,14 +19,13 @@ def index(request):
 
 
 def date_selection(request, year=None, month=None):
-
     if month and year:
         try:
             date_in_month = datetime(year=year, month=month, day=1)
         except ValueError:
-            date_in_month = datetime.now()
+            date_in_month = timezone.now()
     else:
-        date_in_month = datetime.now()
+        date_in_month = timezone.now()
 
     items = get_available_dates(date_in_month, user_id=get_user_id(request))
     dates = available_dates_to_dict(items)
@@ -40,7 +41,7 @@ def date_selection(request, year=None, month=None):
                         {'day': day.strftime("%d"),
                          'value': cd.date().isoformat(),
                          'name': day.strftime("%d %b %Y"),
-                         'disabled': 'disabled' if minutes_available <= 0 else '',
+                         'disabled': 'disabled' if minutes_available < 2 else '',
                          'style': 'btn-outline-danger' if day.weekday() >= 5 else 'btn-outline-secondary',
                          })
 
@@ -69,7 +70,7 @@ def time_selection(request, year=None, month=None, day=None):
                 'time': f"{slot.startDate.strftime('%Y-%m-%dT%H:%M:%S')}",
                 'minutesAvailable': slot.minutesAvailable,
                 'description': slot_name(slot),
-                'disabled': 'disabled' if slot.minutesAvailable <= 0 else '',
+                'disabled': 'disabled' if slot.minutesAvailable < 2 else '',
                 'style': 'btn-outline-warning' if 0 < slot.minutesAvailable < 30 else 'btn-outline-secondary',
             }
         )
@@ -93,28 +94,29 @@ def payment_method_selection(request, time=None):
     tariffs = {}
     for element in res.Items.availableTariff:
         tariffs[element.tariffId] = {
-                'count': 0,
-                'total': 0,
-                'id': element.tariffId,
-                'name': element.name,
-                'step': element.step,
-                'min_time': element.minTime,
-                'price': [{'from': it['from'],
-                           'to': it.to,
-                           'pr': it.price
-                           }
-                          for it in element.tariffDetails.detail]
-            }
+            'count': 0,
+            'total': 0,
+            'id': element.tariffId,
+            'name': element.name,
+            'step': element.step,
+            'min_time': element.minTime,
+            'price': [{'from': it['from'],
+                       'to': it.to,
+                       'pr': it.price
+                       }
+                      for it in element.tariffDetails.detail]
+        }
 
     context = {
         'tariffs': tariffs,
         'minutes_available': minutes_available,
         'booking_date': time,
+        'deposit_minutes': request.user.deposit_minutes,
     }
     return render(request, 'booking/payment_method_selection.html', context)
 
 
-@login_required(login_url='login')
+@login_required()
 def buy_certificate(request):
     certs = get_available_certificate_types(user_id=get_user_id(request))
     head, rows = make_cert_table(certs)
@@ -126,49 +128,122 @@ def buy_certificate(request):
     return render(request, 'booking/certificate.html', context=context)
 
 
-@login_required(login_url='login')
+@login_required()
 def order_confirmation(request):
+    # Проверка юзера на заполненность
+    if not request.user.last_name or not request.user.first_name:
+        return additional_info_page(request)
+
     data = json.loads(request.POST['order'])
+    order_type = request.POST.get('order_type')
+
     total = 0
+    flight_time = 0
     details = []
-    is_cert = isinstance(data, list)
-    if is_cert:
+    booking_date = request.POST.get('booking_date', None)
+
+    if order_type == 'buy_certificate':
         values = data
-        booking_date = None
-    else:
+
+    elif order_type == 'buy_tariff':
         values = data.values()
-        booking_date = request.POST['booking_date']
 
-    for tariff_row in values:
-        row_total = tariff_row['total']
-        if row_total <= 0:
-            continue
+    elif order_type == 'buy_deposit':
+        pass
+        # values = data.values()
 
-        item_name = 'Сертификат' if is_cert else 'Тариф'
-        description = f"{item_name} {tariff_row['name']} - {tariff_row['count']} мин."
-        details.append({'description': description, 'price': row_total})
-        total += row_total
+    elif order_type == 'flight_certificate':
+        for cert in data:
+            flight_time += cert['flightTime']
+            description = f"Полет по сертификату {cert['number']} - {cert['certificateType']}"
+            details.append({'description': description, 'flightTime': cert['flightTime']})
 
-    # потом запрос у 1с на правильность расчета суммы по параметрам
-    order_id = create_order(user_id=get_user_id(request), is_cert=is_cert, data=data, booking_date=booking_date)
+    elif order_type == 'flight_deposit':
+        flight_time = data['deposit_selected']
+        description = f"Полет по депозиту"
+        details.append({'description': description, 'flightTime': flight_time})
 
-    # потом сохраняем заказ в бд, присваиваем идентификатор
+    if order_type in ['buy_tariff', 'buy_certificate']:
+        for tariff_row in values:
+            row_total = tariff_row['total']
+            if row_total <= 0:
+                continue
+
+            item_name = 'Сертификат' if order_type == 'buy_certificate' else 'Тариф'
+            description = f"{item_name} {tariff_row['name']} - {tariff_row['count']} мин."
+            details.append({'description': description, 'price': row_total})
+            total += row_total
+
+    # запрос у 1с на правильность расчета суммы по параметрам
+    order_id = create_order(user_id=get_user_id(request), order_type=order_type, data=data, booking_date=booking_date)
+
+    # сохраняем заказ в бд, присваиваем идентификатор
     order = Order.objects.create(sum=total,
                                  order_id=order_id,
                                  order_data=request.POST['order'],
                                  owner=request.user,
                                  status='new',
-                                 type='certificate' if is_cert else 'flightTime')
-
-    payment_params = robokassa_get_param_str(total, order.id)
+                                 type=order_type)
 
     # мб потом добавить проверку, чтобы заказы не дублировались при закрытии/открытии окошка
     context = {
-        'payment_params': payment_params,
         'total': total,
         'details': details,
     }
-    return render(request, 'booking/modal_confirmation.html', context=context)
+
+    if order_type in ['buy_tariff', 'buy_certificate', 'buy_deposit']:
+        template_name = 'booking/modal_confirmation.html'
+        context['payment_params'] = robokassa_get_param_str(total, order.id)
+        context['total'] = total
+    else:
+        template_name = 'booking/modal_confirmation_without_payment.html'
+        context['order_id'] = order_id
+        context['total'] = flight_time
+
+    return render(request, template_name, context=context)
+
+
+@login_required(login_url='login')
+def order_confirmation_without_payment(request, order_id):
+    # проверки, что заказ то, что надо, и юзер тот
+    order = Order.objects.get(order_id=order_id)
+    if order.owner != request.user:
+        return HttpResponse('error')
+
+    if order.type not in ['flight_certificate', 'flight_deposit']:
+        return HttpResponse('error')
+
+    order.status = 'confirmed'
+    order.save()
+
+    # находим заказ и подтверждаем в 1с
+    response = confirm_order(order_id, total=0, user_id=get_user_id(request))
+
+    if response['status'] == 1:
+        order = Order.objects.get(order_id=order_id)
+        details = json.loads(response['description'])
+
+        if order.type in ['flight_certificate', 'flight_deposit']:
+            for flight in details:
+                possible_fl = Flights.objects.filter(order=order,
+                                                     flight_date=flight['flight_date'],
+                                                     flight_type=flight['flight_type']
+                                                     )
+                if possible_fl.count():
+                    continue
+
+                new_fl = Flights.objects.create(owner=order.owner,
+                                                flight_time=flight['flight_time'],
+                                                flight_date=flight['flight_date'],
+                                                flight_type=flight['flight_type'],
+                                                remote_record_id=flight['flight_id'],
+                                                order=order,
+                                                status='payed')
+
+    else:
+        print('error with 1c ws')
+
+    return redirect('flights')
 
 
 def success_payment(request, url_type):
@@ -189,3 +264,30 @@ def success_payment(request, url_type):
 
     return redirect('home')  # либо с пользователя
 
+
+@require_POST
+def check_cert(request):
+    cert_number = request.POST.get('cert_number')
+    if cert_number:
+        cert_number = cert_number.strip()
+        try:
+            # дергаем данные из 1с
+            cert_data = check_certificate(cert_number, get_user_id(request))
+
+            if cert_data.status == 2:
+                return JsonResponse({
+                    'status': 'error',
+                    'description': cert_data['description']
+                })
+
+            cert = cert_data['certificate']
+            return JsonResponse({
+                'status': 'ok',
+                'number': cert['number'],
+                'flightTime': cert['flightTime'],
+                'certificateType': cert['certificateType']
+            })
+
+        except:
+            pass
+    return JsonResponse({'status': 'error'})

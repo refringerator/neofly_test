@@ -19,7 +19,7 @@
             <div class="column">
                 <form method="POST" action="">
                     {% csrf_token %}
-                    {{ form }}
+                    {{ form.as_ul }}
                     <input type="submit" value="Submit">
                 </form>
             </div>

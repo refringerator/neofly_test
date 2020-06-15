@@ -1,28 +1,32 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, views
 from django.urls import reverse_lazy
+from django.views.decorators.http import require_POST
+from django.conf import settings
+
 from booking.models import Certificate, Order, Flights
 from .forms import RegisterForm
 from phone_login.backends.phone_backend import PhoneBackend
 from phone_login.models import PhoneToken
 
 
-@login_required(login_url='login')
+@login_required()
 def certificates(request):
-    certs = Certificate.objects.filter(owner=request.user)
+    certs = Certificate.objects.filter(owner=request.user, is_used=False)
     context = {'certificates': certs}
     return render(request, 'booking/certificates.html', context)
 
 
-@login_required(login_url='login')
+@login_required()
 def flight_records(request):
     flights = Flights.objects.filter(owner=request.user)
     context = {'flights': flights}
     return render(request, 'booking/flights.html', context)
 
 
-@login_required(login_url='login')
+@login_required()
 def orders(request):
     order_list = Order.objects.filter(owner=request.user)
     context = {'orders': order_list}
@@ -34,52 +38,40 @@ class Logout(views.LogoutView):
 
 
 def login_page(request):
-    # На форме кнопка с отправкой генерированного пина
-
-    # АПИ в фон_логин вьюшках
-    # По нажатию через ажакс пост запрос - из ответа сохраняем ПК, тестируем с ответом
-    # По Логину - проверка ПК без этой всей байды внизу, эту вьюху вообще удалить
-
-    if request.method == 'POST':
-        phone_number = request.POST.get('phone_number')
-        otp = request.POST.get('otp')
-
-        token = PhoneToken.create_otp_for_number(phone_number)
-
-        phone_backend = PhoneBackend()
-        user = phone_backend.authenticate(request=request, pk=token.id, otp=token.otp)
-        login(request, user, backend='phone_login.backends.phone_backend.PhoneBackend')
-        return redirect('date_selection')
-
-    context = {}
+    context = {'otp_length': settings.PHONE_LOGIN_OTP_LENGTH}
     return render(request, 'booking/login.html', context)
 
 
-def register_page(request):  # TODO убрать вообще регистрацию
-    if request.user.is_authenticated:  # TODO заменить на декоратор как в уроке
-        return redirect('home')
-
+@login_required()
+def additional_info_page(request):
     form = RegisterForm()
 
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            phone_backend = PhoneBackend()
             cd = form.cleaned_data
+            user = request.user
+            user.last_name = cd['surname']
+            user.first_name = cd['name']
+            user.email = cd['email']
+            user.save()
 
-            phone_number = cd['phone_number']
-            token = PhoneToken.create_otp_for_number(phone_number.raw_input)
-            del cd['phone_number']
-            user = phone_backend.authenticate(request=request, pk=token.id, otp=token.otp, **cd)
-            login(request, user, backend='phone_login.backends.phone_backend.PhoneBackend')
-            return redirect('date_selection')
+            return JsonResponse({'status': 'ok'})
+
+    form.data = {
+        'email': request.user.email,
+        'surname': request.user.last_name,
+        'name': request.user.first_name,
+    }
 
     context = {'form': form}
-    return render(request, 'booking/register.html', context)
+    return render(request, 'booking/modal_register.html', context)
 
 
-@login_required(login_url='login')
+@login_required()
 def user_logout(request):  # удалить
     logout(request)
     return redirect('home')
+
+
 

@@ -32,7 +32,7 @@ class GenerateOTP(CreateAPIView):
                 )
                 return Response(phone_token.data)
             return Response({
-                'reason': "you can not have more than {n} attempts per day, please try again tomorrow".format(
+                'reason': "Вы не можете получать более {n} кодов в день, пожалуйста, попробуйте завтра".format(
                     n=getattr(settings, 'PHONE_LOGIN_ATTEMPTS', 10))}, status=status.HTTP_403_FORBIDDEN)
         return Response(
             {'reason': ser.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -59,7 +59,7 @@ class ValidateOTP(CreateAPIView):
                 return Response(response, status=status.HTTP_200_OK)
             except ObjectDoesNotExist:
                 return Response(
-                    {'reason': "OTP doesn't exist"},
+                    {'reason': "Одноразовый пароль не существует"},  # OTP doesn't exist
                     status=status.HTTP_406_NOT_ACCEPTABLE
                 )
         return Response(

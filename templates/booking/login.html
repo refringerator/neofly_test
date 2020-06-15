@@ -1,0 +1,154 @@
+{% extends 'booking/main.html' %}
+
+{% block title %}Выбор времени{% endblock %}
+
+{% block body %}
+    <div class="container mt-3">
+        <h2>Форма входа</h2>
+        <br>
+    </div>
+<style>
+.btn{
+    margin-bottom: 5px;
+    }
+</style>
+
+    <section class="section">
+        <div class="container">
+
+            <form method="post" action="" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="phone_number">Номер телефона:</label>
+                    <input type="text" class="form-control" id="phone_number" placeholder="+79999999999"
+                           name="phone_number" required>
+                    <div class="valid-feedback">Valid.</div>
+                    <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+
+                <div class="input-group is-invalid">
+
+                    <div class="form-group">
+                      <label for="otp">Одноразовый код:</label>
+                        <input type="password" class="form-control" id="otp" placeholder="999999" name="otp"
+                               required>
+                    </div>
+                    <div class="input-group-append">
+                        <button id="get_otp_button" type="button" class="btn btn-outline-secondary">Получить одноразовый код</button>
+                    </div>
+                </div>
+                <div class="form-group form-check">
+                    <label class="form-check-label">
+                        <input class="form-check-input" id="confirm" type="checkbox" name="remember" required> Принимаю условия
+                        соглашения.
+                        <div class="valid-feedback">Valid.</div>
+                        <div class="invalid-feedback">Check this checkbox to continue.</div>
+                    </label>
+                </div>
+                <button id="login_button" type="button" class="btn btn-primary">Войти</button>
+                <input type="hidden" name="next" value="{{ next }}" />
+            </form>
+        </div>
+
+    </section>
+
+{% endblock %}
+
+{# https://getbootstrap.com/docs/4.5/components/forms/#how-it-works #}
+
+{% block jscript %}
+    {{ otp_length|json_script:"otp_length" }}
+    <script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
+
+    <script>
+        otp = {
+            primary_key: 0,
+            otp_length: JSON.parse(document.getElementById('otp_length').textContent)
+        }
+
+        otp.onlyDigits = function onlyDigits(p){
+            return p.replace(/\D/g, "");
+        }
+
+        otp.isValid = function isValid(p) {
+            var phoneRe = /^[2-9]\d{2}[2-9]\d{2}\d{4}$/;
+            var digits = otp.onlyDigits(p);
+            return phoneRe.test(digits) && digits.length === 10
+                || phoneRe.test(digits.substring(1)) && digits.length === 11;
+        }
+
+        $(document).ready(function () {
+            $("#get_otp_button").click(function () {
+                var phone = $("#phone_number").val()
+                if (!otp.isValid(phone)){
+                    alert("Номер телефона недейтсвительный!");
+                    return;
+                }
+
+                phone = otp.onlyDigits(phone);
+                phone = '+' + (phone.length===10 ? "7" : "") + phone;
+                $("#phone_number").val(phone);
+
+                var jqxhr = $.post("{% url 'generate' %}", {"phone_number": phone}, function (response) {
+                    otp.primary_key = response.pk;
+                    if ('otp' in response){
+                        alert(`Одноразовый код: ${response.otp}`)
+                    }
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+                    })
+                    .fail(function (response) {
+                        var lol = response
+                        alert(JSON.stringify(response.responseJSON.reason));
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+            });
+
+            $("#login_button").click(function () {
+                if(!$("#confirm").prop("checked")){
+                    alert('Необходимо принять условия');
+                    return;
+                }
+                if (!otp.isValid($("#phone_number").val())){
+                    alert("Номер телефона недейтсвительный!");
+                    return;
+                }
+
+                var code =  $("#otp").val();
+                code = otp.onlyDigits(code);
+                if (!code.length === otp.otp_length){
+                    alert('Одноразовый код введен не полностью');
+                    return;
+                }
+
+                var data = {
+                    'pk': otp.primary_key,
+                    'otp': code
+                }
+
+                var jqxhr = $.post("{% url 'validate' %}", data, function (ddd) {
+                    {#alert("success");#}
+                    if(ddd.status === 200){
+                        const searchString = new URLSearchParams(window.location.search);
+                        const url = searchString.get('next');
+
+                        window.location.href = url ? url : "/";
+                    }
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+                    })
+                    .fail(function () {
+                        alert("error");
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+            });
+        });
+    </script>
+
+{% endblock %}

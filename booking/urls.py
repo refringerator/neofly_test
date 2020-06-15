@@ -13,7 +13,7 @@ urlpatterns = [
     path('confirmation/', views.order_confirmation, name='order_confirmation'),
     path('success_payment/<str:url_type>/', views.success_payment, name='success_payment'),
 
-
-
+    path('cert_check/', views.check_cert, name='cert_check'),
+    path('confirm_without_payment/<str:order_id>/', views.order_confirmation_without_payment, name='confirm_without_payment'),
 
 ]

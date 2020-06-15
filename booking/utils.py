@@ -21,6 +21,9 @@ def init_soap_client():
 
 
 def available_dates_to_dict(dates):
+    if dates is None:
+        return {}
+
     return {item.startDate: item.minutesAvailable for item in dates.availableElement}
 
 
@@ -83,11 +86,10 @@ def get_user_id(request):
     return request.user.id or settings.WS_DEFAULT_USER_ID
 
 
-def create_order(user_id, is_cert, data, booking_date):
+def create_order(user_id, order_type, data, booking_date):
     client = init_soap_client()
-    details = []
 
-    if is_cert:
+    if order_type == 'buy_certificate':
         order_data = {
             'newCertificates':
                 {
@@ -102,7 +104,39 @@ def create_order(user_id, is_cert, data, booking_date):
         }
 
         total = sum(item['price'] for item in order_data['newCertificates']['newCertificate'])
-    else:
+
+    elif order_type == 'flight_certificate':
+        order_data = {
+            'flightTime':
+                {'bookingDate': str(booking_date).replace('"', ''),
+                 'certificates':
+                     {'certificate': [
+                         {'number': x['number'],
+                          'certificateType': x['certificateType'],
+                          'flightTime': x['flightTime']
+                          }
+                         for x in data
+                     ]}
+                 }
+        }
+        total = 0
+
+    elif order_type == 'flight_deposit':
+        order_data = {
+            'flightTime':
+                {'bookingDate': str(booking_date).replace('"', ''),
+                 'depositMinutes': data['deposit_selected']
+                 }
+            }
+        total = 0
+
+    elif order_type == 'buy_deposit':
+        order_data = {
+            'depositMinutes': data['depositMinutes']
+        }
+        total = data['total']
+
+    elif order_type == 'buy_tariff':
         values = data.values()
         order_data = {
             'flightTime':
@@ -114,9 +148,9 @@ def create_order(user_id, is_cert, data, booking_date):
                          'sum': x['total']
                          }
                         for x in values if x['count']
-                    ]}
-                }
-        }
+                        ]}
+                    }
+            }
 
         total = sum(item['sum'] for item in order_data['flightTime']['tariffRecords']['record'])
 
@@ -131,3 +165,10 @@ def confirm_order(invoice_id, total, user_id):
     client = init_soap_client()
     res = client.service.confirmOrder(invoiceId=invoice_id, UserId=user_id, total=total)
     return res
+
+
+def check_certificate(cert_number, user_id):
+    client = init_soap_client()
+    res = client.service.checkCertificate(certificateNumber=cert_number, UserId=user_id)
+    return res
+

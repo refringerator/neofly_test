@@ -46,14 +46,14 @@ def robokassa_check_crc(request, url_type):
         return
 
     order.payed = True
+    order.status = 'payed'
     order.save()
 
     response = confirm_order(order.order_id, out_summ, order.owner_id)
     if response['status'] == 1:
-        is_cert = order.type == 'certificate'
         details = json.loads(response['description'])
 
-        if is_cert:
+        if order.type == 'buy_certificate':
             for certificate in details:
                 cert_number = certificate['number']
                 possible_certs = Certificate.objects.filter(cert_number=cert_number)
@@ -65,7 +65,8 @@ def robokassa_check_crc(request, url_type):
                                                  cert_number=cert_number,
                                                  flight_time=certificate['time'],
                                                  order=order)
-        else:  # flight time
+
+        elif order.type == 'buy_tariff':
             for flight in details:
                 possible_certs = Flights.objects.filter(order=order,
                                                         flight_date=flight['flight_date'],
@@ -75,11 +76,12 @@ def robokassa_check_crc(request, url_type):
                     continue
 
                 cer = Flights.objects.create(owner=order.owner,
-                                                 flight_time=flight['flight_time'],
-                                                 flight_date=flight['flight_date'],
-                                                 flight_type=flight['flight_type'],
-                                                 order=order,
-                                                 status='payed')
+                                             flight_time=flight['flight_time'],
+                                             flight_date=flight['flight_date'],
+                                             flight_type=flight['flight_type'],
+                                             remote_record_id=flight['flight_id'],
+                                             order=order,
+                                             status='payed')
 
     else:
         print('error with 1c ws')

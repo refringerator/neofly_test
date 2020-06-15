@@ -1,0 +1,75 @@
+<!-- Modal -->
+<div id="myModal" class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalCenterTitle">Мои данные</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Для оформления заказа необходимо заполнить свои данные</p>
+
+                <form action="/your-name/" method="post">
+
+                    <label for="id_surname">Фамилия: </label>
+                    {{ form.surname }}<br>
+                    <label for="id_name">Имя: </label>
+                    {{ form.name }}<br>
+                    <label for="id_email">email: </label>
+                    {{ form.email }}<br>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary" onclick="registration.save()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
+    <script>
+        registration = {}
+
+        registration.save = function save_data() {
+            // берем данные, проверяем
+            var f = $("#id_surname").val();
+            var i = $("#id_name").val();
+            var e = $("#id_email").val();
+
+            // сохраняем
+               {#var phone = $("#phone_number").val()#}
+               {# if (!otp.isValid(phone)){#}
+               {#     alert("Номер телефона недейтсвительный!");#}
+               {#     return;#}
+               {# }#}
+
+                data = {
+                    "surname": f,
+                    "name": i,
+                    "email": e,
+                    csrfmiddlewaretoken: CSRF_TOKEN
+                }
+
+                var jqxhr = $.post("{% url 'register' %}", data, function (response) {
+
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+                    })
+                    .fail(function (response) {
+                        var lol = response
+                        alert('Ошибка сохранения');
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+
+            // закрываем окошко
+            $('#myModal').modal('hide');
+        }
+    </script>
+</div>
