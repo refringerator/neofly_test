@@ -1,8 +1,10 @@
 from collections import defaultdict
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.conf import settings
 import zeep
+from django.urls import reverse
 from requests import Session
 from requests.auth import HTTPBasicAuth
 from zeep.transports import Transport
@@ -156,14 +158,37 @@ def create_order(user_id, order_type, data, booking_date):
 
     order_data['total'] = total
     order_data['UserId'] = user_id
+
     res = client.service.createOrder(Data=order_data)
+
+    # здесь проверка статуса
+    # если не 1, тогда дернуть сентри с ошибкой
+    # и как-то обработать дальнейшие действия
 
     return res.invoiceId
 
 
-def confirm_order(invoice_id, total, user_id):
+def update_user_info(phone_number, user_id):
     client = init_soap_client()
-    res = client.service.confirmOrder(invoiceId=invoice_id, UserId=user_id, total=total)
+    res = client.service.getUserInfo(PhoneNumber=phone_number, UserId=user_id)
+    if res.status == 1:
+        user_model = get_user_model()
+        user = user_model.objects.filter(id=user_id)[0]
+        if user:
+            user.last_name = res.lastName
+            user.first_name = res.firstName
+            user.deposit_minutes = res.isDepositAvailable
+            user.is_deposit_available = res.isDepositAvailable
+            if res.email:
+                user.email = res.email
+            user.save()
+
+
+def confirm_order(invoice_id, total, user_id, order_id):
+    client = init_soap_client()
+    res = client.service.confirmOrder(invoiceId=invoice_id, UserId=user_id,
+                                      total=total,
+                                      orderId=order_id)
     return res
 
 
@@ -172,3 +197,17 @@ def check_certificate(cert_number, user_id):
     res = client.service.checkCertificate(certificateNumber=cert_number, UserId=user_id)
     return res
 
+
+def get_submenu(kind):
+    submenu = []
+    if kind == 'flight':
+        submenu.append({'name': 'Запись на полет', 'url': reverse('date_selection')})
+        submenu.append({'name': 'Купить сертификат', 'url': reverse('buy_certificate')})
+
+    elif kind == 'lk':
+        submenu.append({'name': 'Мой кабинет', 'url': reverse('lk')})
+        submenu.append({'name': 'Заказы', 'url': reverse('orders')})
+        submenu.append({'name': 'Сертификаты', 'url': reverse('certificates')})
+        submenu.append({'name': 'Полеты', 'url': reverse('flights')})
+
+    return submenu

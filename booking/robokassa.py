@@ -49,7 +49,7 @@ def robokassa_check_crc(request, url_type):
     order.status = 'payed'
     order.save()
 
-    response = confirm_order(order.order_id, out_summ, order.owner_id)
+    response = confirm_order(order.order_id, out_summ, order.owner_id, inv_id)
     if response['status'] == 1:
         details = json.loads(response['description'])
 

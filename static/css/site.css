@@ -1,0 +1,271 @@
+html,
+body {
+    height: 100%;
+}
+
+.wrap {
+    min-height: 100%;
+    height: auto;
+    margin: 0 auto -60px;
+    padding: 0 0 60px;
+}
+
+.wrap > .container {
+    padding: 70px 15px 20px;
+}
+
+.footer {
+    height: 60px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+.jumbotron {
+    text-align: center;
+    background-color: transparent;
+}
+
+.jumbotron .btn {
+    font-size: 21px;
+    padding: 14px 24px;
+}
+
+.not-set {
+    color: #c55;
+    font-style: italic;
+}
+
+/* add sorting icons to gridview sort links */
+a.asc:after, a.desc:after {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    padding-left: 5px;
+}
+
+a.asc:after {
+    content: "\e151";
+}
+
+a.desc:after {
+    content: "\e152";
+}
+
+.sort-numerical a.asc:after {
+    content: "\e153";
+}
+
+.sort-numerical a.desc:after {
+    content: "\e154";
+}
+
+.sort-ordinal a.asc:after {
+    content: "\e155";
+}
+
+.sort-ordinal a.desc:after {
+    content: "\e156";
+}
+
+.grid-view td {
+    white-space: nowrap;
+}
+
+.grid-view .filters input,
+.grid-view .filters select {
+    min-width: 50px;
+}
+
+.hint-block {
+    display: block;
+    margin-top: 5px;
+    color: #999;
+}
+
+.error-summary {
+    color: #a94442;
+    background: #fdf7f7;
+    border-left: 3px solid #eed3d7;
+    padding: 10px 20px;
+    margin: 0 0 15px 0;
+}
+
+/* align the logout "link" (button in form) of the navbar */
+.nav li > form > button.logout {
+    padding: 15px;
+    border: none;
+}
+
+@media(max-width:767px) {
+    .nav li > form > button.logout {
+        display:block;
+        text-align: left;
+        width: 100%;
+        padding: 10px 15px;
+    }
+}
+
+.nav > li > form > button.logout:focus,
+.nav > li > form > button.logout:hover {
+    text-decoration: none;
+}
+
+.nav > li > form > button.logout:focus {
+    outline: none;
+}
+
+.page-content-wrap {
+    padding: 20px 50px;
+}
+
+.page-content-wrap a {
+    color: #70add3;
+}
+.page-content-wrap p {
+    margin-bottom: 10px;
+}  
+
+.page-content .main-page__slide-wrap.slick-slide {
+    width: auto !important;
+}
+.page-content .main-page__slide-wrap.slick-slide img {
+    height: 100%;
+}
+
+.page-content .news-page__items .news-page__news-img {
+    width: auto;
+    height: auto;
+}
+.page-content .news-page__items .news-page__news-item {
+    max-width: 336px;
+}
+
+.page-content .news-page__items .news-page__news-link {
+    height: auto;
+}
+/*Дополнительное свойства для меню*/
+.menu__wrap{
+    order: 3;
+    height: 100%;
+    display: flex;
+}
+.menu__scroll{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+/*бургер меню*/
+
+/*гамбургер*/
+.menu__burger {
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    width: 70px;
+    height: 70px;
+    font-size: 0;
+    text-indent: -9999px;
+    appearance: none;
+    box-shadow: none;
+    border-radius: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s;
+    border-bottom: 2px solid #293652;
+    display: none;
+    background: none;
+    order: 1;
+  }
+   
+  .menu__burger span {
+    display: block;
+    position: absolute;
+    top: 33px;
+    left: 22px;
+    right: 22px;
+    height: 3px;
+    background: white;
+  }
+   
+  .menu__burger span::before,
+  .menu__burger span::after {
+    position: absolute;
+    display: block;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #fff;
+    content: "";
+  }
+   
+  .menu__burger span::before {
+    top: -7px;
+  }
+   
+  .menu__burger span::after {
+    bottom: -7px;
+  }
+
+  .menu__burger:focus {
+    outline: none;
+  }
+   
+  .menu__burger span {
+    transition: background 0s 0.3s;
+  }
+   
+  .menu__burger span::before,
+  .menu__burger span::after {
+    transition-duration: 0.3s, 0.3s;
+    transition-delay: 0.3s, 0s;
+  }
+   
+  .menu__burger span::before {
+    transition-property: top, transform;
+  }
+   
+  .menu__burger span::after {
+    transition-property: bottom, transform;
+  }
+   
+  /* состояние active при открытом меню  */
+  .menu__burger.open {
+      
+  }
+   
+  .menu__burger.open span {
+    background: none;
+  }
+   
+  .menu__burger.open span::before {
+    top: 0;
+    transform: rotate(45deg);
+  }
+   
+  .menu__burger.open span::after {
+    bottom: 0;
+    transform: rotate(-45deg);
+  }
+   
+  .menu__burger.open span::before,
+  .menu__burger.open span::after {
+    transition-delay: 0s, 0.3s;
+  }
+
+/**/
+
+
+.page-wrap {
+    display: flex;
+    overflow: auto;
+    width: 100%;
+}
+.news-block {
+    display: block;
+}

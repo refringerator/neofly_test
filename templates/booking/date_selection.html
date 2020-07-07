@@ -1,46 +1,45 @@
 {% extends 'booking/main.html' %}
 
 {% block body %}
-    <style>
-        .btn {
-            margin-bottom: 5px;
-        }
-    </style>
-
-    <div class="container mt-3">
-        <h2>Выбор даты полета</h2>
-        <br>
+    <div class="top-block">
+        <div class="page-title">Выбор даты полета</div>
+        <button class="btn btn--bd-light-blue btn--default btn--arrow-left btn-back">Вернуться назад</button>
     </div>
-    <div class="container mt-3">
-        <div class="columns">
-            <button id="button_prev" type="button" class="btn btn-light">❮</button>
+
+
+    <div class="content-wrap">
+
+        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+            <button id="button_prev" type="button" class="btn btn-light"{{ button_disabled }}>❮</button>
             <span>{{ month_name }}</span>
             <button id="button_next" type="button" class="btn btn-light"> ❯</button>
+            {#  <div class="btn-group" role="group"> TODO СДЕЛАТЬ ВЫБОР МЕСЯЦА#}
+            {#    <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">#}
+            {#      Dropdown#}
+            {#    </button>#}
+            {#    <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">#}
+            {#      <a class="dropdown-item" href="#">Dropdown link</a>#}
+            {#      <a class="dropdown-item" href="#">Dropdown link</a>#}
+            {#    </div>#}
+            {#  </div>#}
+        </div>
+
+
+        <div class="container">
+            {% for week in booking_data %}
+                <div class="btn-group">
+                    {% for day in week %}
+                        <a
+                                href="{% url 'time_selection' %}{{ day.value }}"
+                                class="btn {{ day.style }} {{ day.disabled }}"
+                                role="button">{{ day.day }}
+                        </a>
+                    {% endfor %}
+                </div>
+                <br>
+            {% endfor %}
         </div>
     </div>
-    <section class="section">
-        <div class="container">
-            <div class="columns">
-                <div class="column">
-                    <form action="{% url 'time_selection' %}" method="POST">
-                        {% csrf_token %}
-                        <input id="date" name="date" type="hidden" value="{{ month }}">
-                        {% for week in booking_data %}
-                            <div class="buttons are-medium">
-                                {% for day in week %}
-                                    <a
-                                        href="{% url 'time_selection' %}{{ day.value }}"
-                                        class="btn {{ day.style }} {{ day.disabled }}"
-                                        role="button">{{ day.day }}
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        {% endfor %}
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
 
 
 {% endblock %}
@@ -59,6 +58,10 @@
             $("#button_prev").click(function () {
                 cur_month.setMonth(cur_month.getMonth() - 1);
                 window.location.href = "{% url 'date_selection' %}" + cur_month.toISOString().substr(0, 7);
+            });
+
+            $('.btn-back').on('click', function () {
+                window.history.back();
             });
         })
     </script>

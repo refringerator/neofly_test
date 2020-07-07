@@ -79,7 +79,12 @@ class PhoneBackend(ModelBackend):
                     **extra_fields
                 )
                 # задача подтянуть данные из 1с
-                update_users_info.delay(user_id=user.id)
+                # from booking.utils import update_user_info
+                # # update_users_info.delay(user_id=user.id)
+                # # try:
+                # update_user_info(phone_number=str(phone_token.phone_number), user_id=user.id)
+                # # except:
+                #     print("Что-то пошло не так при создании пользователя")
 
             phone_token.used = True
             phone_token.attempts = phone_token.attempts + 1

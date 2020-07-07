@@ -54,7 +54,7 @@ class Flights(models.Model):
     flight_time = models.DecimalField(max_digits=3, decimal_places=0, verbose_name="Длительность полета")
     flight_type = models.CharField(max_length=50, verbose_name="Вид полета")
     is_used = models.BooleanField(default=False, verbose_name="Отлетан")
-    date_created = models.DateTimeField(auto_now_add=True, null=True)
+    date_created = models.DateTimeField(auto_now_add=True, null=True, verbose_name="Дата создания")
     flight_date = models.DateTimeField(null=True, verbose_name="Дата бронирования")
     owner = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL, verbose_name="Клиент")
     order = models.ForeignKey(Order, null=True, on_delete=models.SET_NULL, verbose_name="Заказ")

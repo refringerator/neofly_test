@@ -9,7 +9,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body"><style>input {background-color: #e2e2e2;}</style>
                 <p>Для оформления заказа необходимо заполнить свои данные</p>
 
                 <form action="/your-name/" method="post">
@@ -21,11 +21,18 @@
                     <label for="id_email">email: </label>
                     {{ form.email }}<br>
                 </form>
-
+                <div class="form-group form-check">
+                    <label class="form-check-label">
+                        <input class="form-check-input" id="confirm" type="checkbox" name="remember" required> Принимаю условия
+                        соглашения.
+                        <div class="valid-feedback">Valid.</div>
+                        <div class="invalid-feedback">Check this checkbox to continue.</div>
+                    </label>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary" onclick="registration.save()">Сохранить</button>
+                <button type="button" class="btn btn-secondary active" data-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary active" onclick="registration.save()">Сохранить</button>
             </div>
         </div>
     </div>
@@ -35,6 +42,11 @@
         registration = {}
 
         registration.save = function save_data() {
+            if (!$("#confirm").prop("checked")) {
+                alert('Необходимо принять условия');
+                return;
+            }
+
             // берем данные, проверяем
             var f = $("#id_surname").val();
             var i = $("#id_name").val();

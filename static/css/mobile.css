@@ -1,0 +1,684 @@
+@media screen and (max-width: 1560px){
+    .sub-menu__help-block{
+        padding: 15px;
+    }
+}
+@media screen and (max-width: 1380px){
+    .review-page iframe{
+        width: 100%;
+    }
+}
+@media screen and (max-width: 1279px){
+    /*общие стили элементов*/
+    .page-content .top-block{
+        height: 118px;
+    }
+    /*мобильная версия меню*/
+    .menu{
+        width: 70px;
+        position: relative;
+    }
+    .menu__burger{
+        display: block;
+    }
+    .menu__logo{
+        height: auto;
+        border-width: 2px;
+    }
+    .menu__logo a{
+        background: url(../img/logo-small-white.png) no-repeat center/45px;
+        height: 70px;
+        width: 70px;
+        margin-top: 0;
+    }
+    .menu__logo a img{
+        display: none;
+    }
+    .menu__user-block{
+        min-height: 70px;
+        padding-left: 0;
+    }
+    .menu__user-block .user-block__img{
+        margin: auto;
+    }
+    .menu__user-block .user-block__text{
+        font-size: 0;
+        width: 70px;
+        height: 70px;
+        position: absolute;
+    }
+    .menu__wrap{
+        position: absolute;
+        height: 100vh;
+        overflow: auto;
+        width: calc(100vw - 70px);
+        background-color: #192234;
+        z-index: 20;
+        left: 70px;
+        padding: 43px 0 43px 79px;
+        display: none;
+    }
+    .menu__wrap.open{
+        display: flex;
+    }
+    .menu__nav .nav__unit{
+        padding-left: 0;
+        font-size: 32px;
+        height: 84px;
+    }
+    .menu__nav .nav__unit.active:after{
+        display: none;
+    }
+    .menu__footer{
+        margin-top: 84px;
+        padding: 0;
+        max-width: 270px;
+    }
+    /*мобильная версия сабменю*/
+    .sub-menu{
+        height: 100%;
+        width: calc(100vw - 70px);
+        background: #192234;
+        z-index: 20;
+        padding: 20px 50px 25px 50px;
+        display: block;
+        position: static;
+        height: auto;
+    }
+    .sub-menu__unit{
+        padding-left: 0;
+        font-size: 20px;
+        min-height: 20px;
+        height: auto;
+        margin-bottom: 0;
+    }
+    .sub-menu__unit + .sub-menu__unit:before{
+        content: none;
+    }
+    /*Тарифы*/
+    .page-content .tariffs-page__link{
+        height: calc(50vh - 59px);
+        line-height: 1.1;
+    }
+    .page-content .tariffs-page__text{
+        padding-bottom: 55px;
+    }
+    .page-content {
+        overflow: visible;
+        height: auto;
+    }
+    .page-wrap {
+        overflow: auto;
+        display: block;
+    }
+}
+@media screen and (max-width: 1200px){
+    /*Сайт главная страница*/
+    .page-content .main-page__news-block{
+        flex-wrap: wrap;
+    }
+    .news-block--large{
+        width: 100%;
+        background-repeat: no-repeat!important;
+        background-size: cover!important;
+    }
+    .page-content .main-page__small-news-block{
+        width: 51%;
+    }
+    .page-content .main-page__btn-all-news{
+        width: 49%;
+        justify-content: center;
+        padding-left: 50px;
+        background: url(../img/icon-arrow-right-black-large.png) no-repeat calc(50% - 80px) center,#eff3f7;
+    }
+}
+@media screen and (max-width: 1100px){
+    /*Сайт главная страница*/
+    .page-content .main-page__about-img{
+        display: none;
+    }
+    .page-content .main-page__about-text{
+        max-width: 69%;
+    }
+}
+@media screen and (max-width: 975px){
+    /*общие стили*/
+    .page-content-wrap,
+    .page-content .tariff-fan,
+    .page-content .tariff-sport{
+        padding: 20px;
+    }
+    .page-title{
+        font-size: 28px;
+    }
+    .page-content .top-block{
+        padding: 20px;
+        height: 80px;
+    }
+    /*Контакты*/
+    .page-content .contacts-page__items{
+        flex-wrap: wrap;
+    }
+    .contacts-page__item{
+        margin: 5px 15px;
+    }
+    .page-content .contacts-page .site-title{
+        font-size: 36px;
+    }
+    .page-content .contacts-page__content{
+        padding: 55px 35px;
+        background: url(../img/icon-letter-admission.png) no-repeat 35px 60px;
+    }
+    .page-content .contacts-page__letter-admission{
+        padding-left: 90px;
+    }
+}
+@media screen and (max-width: 900px){
+    /*Сайт главная страница*/
+    .page-content .main-page .main-block{
+        min-height: 617px;
+    }
+    .page-content .main-page .main-block__content{
+        margin-left: 67px;
+        margin-top: 83px;
+    }
+    .page-content .main-page .main-block__subtitle{
+        margin: 26px 0 52px;
+        padding-left: 5px;
+    }
+    .page-content .main-page .main-block__info-wrap{
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .page-content .main-page .main-block__how-to-get{
+        line-height: 56px;
+        margin-bottom: 31px;
+        margin-right: 0;
+    }
+    .page-content .main-page__panel{
+        flex-direction: column;
+    }
+    .page-content .main-page__panel-item{
+        height: 100px;
+        padding-left: 197px;
+    }
+    .page-content .main-page__panel-item img{
+        left: 69px;
+    }
+    .page-content .main-page__about{
+        flex-direction: column;
+        align-items: start;
+        padding: 60px 66px;
+    }
+    .page-content .main-page__about-btn{
+        margin-left: 0;
+        margin-top: 47px;
+    }
+    .page-content .main-page__about-text{
+        max-width: none;
+        font-size: 20px;
+    }
+    .page-content .main-page__about-text div{
+        line-height: 1.3;
+        margin-bottom: 21px;
+    }
+    .page-content .main-page__photo-slider-wrap{
+        flex-direction: column;
+    }
+    .page-content .main-page__photo-slider{
+        order: -1;
+        overflow: hidden;
+    }
+    .page-content .main-page__photo-slider-prev{
+        left: 0;
+    }
+    .page-content .main-page__photo-btn{
+        width: 100%;
+        padding-left: 40px;
+        justify-content: center;
+        background: url(../img/icon-arrow-right-white-large.png) no-repeat calc(50% - 83px) center,#2d3b59;
+    }
+}
+@media screen and (max-width: 850px){
+    /*общие стили*/
+    .page-content .top-block .btn{
+        font-size: 0;
+        display: block;
+        padding: 0 25px;
+        background: url(../img/icon-arrow-left-blue.png) no-repeat center;
+    }
+    /*Тарифы для новичков*/
+    .page-content .tariff-fan__body-item:nth-child(1){
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+    }
+    .page-content .tariff-fan__text{
+        font-size: 18px;
+    }
+    .page-content .tariff-fan__text br{
+        display: none;
+    }
+    /*Тарифы для спортсменов*/
+    .page-content .tariff-sport__text{
+        font-size: 18px;
+    }
+    /*Контакты*/
+    .page-content .contacts-page__map{
+        display: none;
+    }
+    .page-content .contacts-page__callback-form .field{
+        max-width: none;
+    }
+
+}
+@media screen and (max-width: 768px){
+    /*Новости*/
+    .page-content .news-page__news-link{
+        font-size: 16px;
+    }
+    .page-content .news-page__news-item{
+        margin-bottom: 35px;
+    }
+    .page-content .news-page__news-link{
+        margin-bottom: 10px;
+    }
+}
+@media screen and (max-width: 700px){
+    /*Общие стили*/
+    .page-content .content-wrap--padding{
+        padding: 15px;
+    }
+    /* сайт Главная  страница*/
+    .page-content .main-page .main-block__content{
+        margin: auto;
+    }
+    .news-block--large .news-block__info{
+        padding: 30px;
+    }
+    /*Меню*/
+    /*Меню*/
+    .menu{
+        width: 60px;
+    }
+    .menu__burger{
+        width: 60px;
+        height: 60px;
+    }
+    .menu__burger span{
+        top: 26px;
+        left: 18px;
+        right: 18px;
+    }
+    .menu__footer{
+        margin-top: 30px;
+    }
+    /*меню и сабменю*/
+    .menu__wrap,
+    .sub-menu{
+        width: calc(100vw - 60px);
+        left: 60px;
+    }
+    .menu__wrap,
+    .sub-menu{
+        padding: 25px;
+    }
+    .menu__nav .nav__unit{
+        font-size: 26px;
+        height: 50px;
+        min-height: 0;
+    }
+    /*тарифы для новичков*/
+    .page-content .tariff-fan__table-row .tariff-fan__table-item:nth-child(1){
+        padding-left: 10px;
+    }
+    .page-content .tariff-fan__head-item:nth-child(1),
+    .page-content .tariff-fan__head-item:nth-child(2), 
+    .page-content .tariff-fan__head-item:nth-child(3),
+    .page-content .tariff-fan__item-minute,
+    .page-content .tariff-fan__item-cost{
+        font-size: 20px;
+    }
+    .page-content .tariff-fan__body-row{
+        height: 110px;
+    }
+    .page-content .tariff-fan__tabs{
+        max-width: 375px;
+    }
+    .page-content .tariff-fan__tab{
+        line-height: 1.4;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        min-height: 50px;
+    }
+    .page-content .tariff-fan__table{
+        font-size: 14px;
+    }
+    .page-content .tariff-fan__text,
+    .page-content .tariff-sport__text{
+        font-size: 16px;
+    }
+    .page-content .tariff-fan__item-minute{
+        min-width: 0;
+    }
+    .page-content .tariff-fan__head-row{
+        height: 60px;
+    }
+    .page-content .tariff-fan__head-item:nth-child(1),
+    .page-content .tariff-fan__head-item:nth-child(2), 
+    .page-content .tariff-fan__head-item:nth-child(3){
+        line-height: normal;
+        display: flex;
+        align-items: center;
+    }
+    .page-content .tariff-fan__head-item:nth-child(2), 
+    .page-content .tariff-fan__head-item:nth-child(3){
+        justify-content: center;
+    }
+    .page-content .tariff-fan__item-link{
+        background: none;
+        padding-right: 0;
+    }
+    .page-content .tariff-fan__item-bonus br{
+        display: none;
+    }
+    /*Отзывы*/
+    .review-page iframe{
+        height: 300px;
+    }
+}
+@media screen and (max-width: 630px){
+    /*общие стили*/
+    .page-content .top-block{
+        padding: 15px;
+        height: auto;
+    }
+    .page-title{
+        font-size: 24px;
+        margin-right: 10px;
+    }
+    .page-content-wrap{
+        padding: 15px;
+    }
+    /* сайт Главная  страница*/
+    .page-content .main-page .main-block{
+        min-height: 0;
+        padding: 60px 15px ;
+    }
+    .page-content .main-page .main-block__title{
+        font-size: 45px;
+    }
+    .page-content .main-page .main-block__subtitle{
+        font-size: 18px;
+    }
+    .page-content .main-page__panel-item img{
+        width: 55px;
+        left: 25px;
+    }
+    .page-content .main-page__panel-item{
+        height: 65px;
+        padding-left: 110px;
+        font-size: 17px;
+    }
+    .page-content .main-page__small-news-block{
+        width: 100%;
+    }
+    .page-content .main-page__btn-all-news{
+        width: 100%;
+        height: 200px;
+    }
+    .page-content .main-page__press-title{
+        font-size: 26px;
+        line-height: 80px;
+        padding-left: 20px;
+    }
+    /*Контакты*/
+    .page-content .contacts-page .site-title{
+        font-size: 28px;
+    }
+    .page-content .contacts-page__content{
+        padding: 20px;
+        background: url(../img/icon-letter-admission.png) no-repeat 20px 20px;
+    }
+    .page-content .tariffs-page__text {
+        font-size: 40px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+@media screen and (max-width: 600px){
+    /*Тарифы для спортсменов*/
+    .page-content .tariff-sport__head-row{
+        height: 50px;
+    }
+    .page-content .tariff-sport__body-row{
+        height: 80px;
+    }
+    .page-content .tariff-sport__table-row .tariff-sport__table-item:nth-child(1){
+        padding-left: 10px;
+    }
+    .page-content .tariff-sport__head-item:nth-child(1),
+    .page-content .tariff-sport__head-item:nth-child(2){
+        line-height: normal;
+        display: flex;
+        align-items: center;
+    }
+    .page-content .tariff-sport__head-item:nth-child(1),
+    .page-content .tariff-sport__body-item:nth-child(1),
+    .page-content .tariff-sport__body-item:nth-child(2){
+        font-size: 24px;
+    }
+
+    .page-content .tariff-sport__head-item:nth-child(2){
+        justify-content: center;
+    }
+    /*Системные страницы*/
+    .message-page__header{
+        padding: 20px 20px 0;
+    }
+}
+@media screen and (max-width: 530px){
+    /*Общие стили*/
+    .btn--blue{
+        font-size: 16px;
+    }
+    /* сайт Главная  страница*/
+    .page-content .main-page .main-block__content{
+        margin-left: 0;
+    }
+    .page-content .main-page .main-block__title{
+        font-size: 35px;
+    }
+    .page-content .main-page .main-block__subtitle{
+        font-size: 16px;
+    }
+    .page-content .main-page .main-block__phone-number{
+        font-size: 26px;
+    }
+    .page-content .main-page__about{
+        padding: 30px;
+    }
+    .page-content .main-page__about-text div{
+        font-size: 18px;
+    }
+}
+@media screen and (max-width: 450px){
+    /* сайт Главная  страница*/
+    .page-content .main-page .main-block__title br,
+    .page-content .main-page .main-block__subtitle br{
+        display: none;
+    }
+    .page-content .main-page .main-block{
+        padding: 30px 15px 60px;
+    }
+    .page-content .main-page .main-block__title{
+        font-size: 30px;
+    }
+    .page-content .main-page .main-block__how-to-get{
+        line-height: 50px;
+        padding-left: 50px;
+        background: url(../img/icon-arrow-blue.png) no-repeat 15px center;
+    }
+    .page-content .main-page .main-block__phone-number{
+        font-size: 24px;
+    }
+    .page-content .main-page__about{
+        padding: 15px;
+    }
+    .page-content .main-page__about-text div{
+        font-size: 16px;
+    }
+    .news-block--large .news-block__info-name{
+        font-size: 21px;
+        margin-top: 35px;
+    }
+    .news-block--small .news-block__info-name{
+        font-size: 14px;
+    }
+    /*Контакты*/
+    .page-content .contacts-page__content{
+        background: none;
+        padding: 15px;
+    }
+    .page-content .contacts-page__letter-admission{
+        padding-left: 0;
+    }
+    .page-content .contacts-page .site-title{
+        font-size: 24px;
+    }
+    .contacts-page__item{
+        margin: 5px 0;
+    }
+    /*Тарифы для новичков*/
+    .page-content .tariff-fan{
+        padding: 15px;
+    }
+    .page-content .tariff-fan__head-item:nth-child(1), 
+    .page-content .tariff-fan__head-item:nth-child(2), 
+    .page-content .tariff-fan__head-item:nth-child(3), 
+    .page-content .tariff-fan__item-minute, 
+    .page-content .tariff-fan__item-cost,
+    .page-content .tariff-fan__item-cost.gray{
+        font-size: 16px;
+    }
+    .page-content .tariff-fan__table{
+        font-size: 12px;
+        margin-left: -15px;
+        width: calc(100% + 30px);
+    }
+    .page-content .tariff-fan__table-row .tariff-fan__table-item:nth-child(1){
+        padding-left: 0;
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+    }
+}
+@media screen and (max-width: 430px){
+    /*Меню и сабменю*/
+    .menu__wrap,
+    .sub-menu{
+        padding: 20px 15px;
+    }
+    .menu__nav .nav__unit{
+        font-size: 20px;
+        height: 50px;
+    }
+    /*Тарифы для спортсменов*/
+    .page-content .tariff-sport__head-item:nth-child(1),
+    .page-content .tariff-sport__body-item:nth-child(1),
+    .page-content .tariff-sport__head-item:nth-child(2),
+    .page-content .tariff-sport__body-item:nth-child(2){
+        font-size: 18px;
+    }
+    .page-content .tariff-fan__body-item:nth-child(2),
+    .page-content .tariff-fan__body-item:nth-child(3){
+        padding: 0 5px;
+    }
+    .page-content .tariff-fan__item-link{
+        text-align: center;
+    }
+    /*системные страницы*/
+    .message-page{
+        background-color: #fff;
+    }
+    .message-page.not-found-page .message-page__content{
+        padding: 15px;
+        margin-top: 40px;
+    }
+    .message-page__header{
+        flex-direction: column;
+    }
+    .message-page__header-back{
+        margin-top: 30px;
+    }
+    .message-page__title{
+        font-size: 28px;
+    }
+    .message-page.not-found-page .message-page__img{
+        width: 75px;
+        height: 75px;
+    }
+    /*Отзывы*/
+    .review-page iframe{
+        height: 150px;
+    }
+}
+@media screen and (max-width: 375px){
+    /* сайт Главная  страница*/
+    .page-content .main-page .main-block{
+        padding: 30px 10px 60px;
+    }
+    .page-content .main-page .main-block__title{
+        font-size: 26px;
+    }
+    .page-content .main-page__panel-item img{
+        width: 40px;
+        left: 15px;
+    }
+    .page-content .main-page__panel-item{
+        height: 50px;
+        padding-left: 75px;
+        font-size: 16px;
+    }
+    .page-content .tariffs-page__text {
+        font-size: 26px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

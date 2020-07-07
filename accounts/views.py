@@ -7,29 +7,38 @@ from django.views.decorators.http import require_POST
 from django.conf import settings
 
 from booking.models import Certificate, Order, Flights
+from booking.utils import get_submenu
 from .forms import RegisterForm
-from phone_login.backends.phone_backend import PhoneBackend
-from phone_login.models import PhoneToken
+
 
 
 @login_required()
 def certificates(request):
     certs = Certificate.objects.filter(owner=request.user, is_used=False)
-    context = {'certificates': certs}
+    context = {
+        'certificates': certs,
+        'submenu': get_submenu('lk'),
+    }
     return render(request, 'booking/certificates.html', context)
 
 
 @login_required()
 def flight_records(request):
     flights = Flights.objects.filter(owner=request.user)
-    context = {'flights': flights}
+    context = {
+        'flights': flights,
+        'submenu': get_submenu('lk'),
+    }
     return render(request, 'booking/flights.html', context)
 
 
 @login_required()
 def orders(request):
     order_list = Order.objects.filter(owner=request.user)
-    context = {'orders': order_list}
+    context = {
+        'orders': order_list,
+        'submenu': get_submenu('lk'),
+    }
     return render(request, 'booking/orders.html', context)
 
 
@@ -74,4 +83,6 @@ def user_logout(request):  # удалить
     return redirect('home')
 
 
-
+@login_required()
+def lk(request):
+    return flight_records(request)

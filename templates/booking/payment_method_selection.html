@@ -4,6 +4,7 @@
     <div id="my-modal-window"></div>
     <div class="container mt-3">
         <h2>Выбор способа оплаты</h2>
+        <h3>Дата бронирования {{ booking_date_as_dt|date:'d.m.Y H:i' }}</h3>
         <br>
         <!-- Nav tabs -->
         <ul class="nav nav-tabs">
@@ -27,6 +28,7 @@
                 <div class="container">
                     <table class="table table-borderless table-striped">
                         <tbody>
+                        {% if tariffs %}
                         {% for tariff in tariffs.values %}
                             <tr id="{{ tariff.id }}" style="width: 25%">
                                 <td id="name_{{ tariff.id }}">{{ tariff.name }}</td>
@@ -51,6 +53,9 @@
                                 </td>
                             </tr>
                         {% endfor %}
+                        {% else %}
+                            <p>Нет доступных тарифов на выбранную дату</p>
+                        {% endif %}
                         </tbody>
                         <tfoot>
                         <tr>
@@ -65,22 +70,24 @@
                     </table>
                 </div>
                 <div>
-                    <button id="checkout" class="btn btn-info">Перейти к оплате</button>
+                    <button id="checkout" class="btn btn-outline-secondary active">Перейти к оплате</button>
                 </div>
 
             </div>
             <div id="certificate" class="container tab-pane fade"><br>
                 <h3>Оплатить сертификатом</h3>
                 <p>Введите номер сертификата, который хотите использовать</p>
+                <p>Можно добавить несколько сертификатов на полет общей продолжительностью не более чем {{ minutes_available }} мин.</p>
+                <style>input {background-color: #e2e2e2;}</style>
                 <input type="text" id="cert_number" name="cert_number">
-                <button id="cert_add" class="btn btn-info">+</button>
+                <button id="cert_add" class="btn btn-info active">+</button>
                 <div class="container">
                     <ul id="bucket" class="list-group">
                     </ul>
                 </div>
                 <br><br>
                 <div>
-                    <button id="cert_checkout" class="btn btn-info">Забронировать</button>
+                    <button id="cert_checkout" class="btn btn-outline-secondary active">Забронировать</button>
                 </div>
             </div>
 
@@ -111,7 +118,7 @@
 
                 <br><br>
                 <div>
-                    <button id="deposit_checkout" class="btn btn-info">Забронировать</button>
+                    <button id="deposit_checkout" class="btn btn-outline-secondary active">Забронировать</button>
                 </div>
             </div>
             {% endif %}
@@ -130,7 +137,9 @@
 
     <script>
         calc = {
+            {# Ограничение на количесво минут для выбора #}
             total_minutes_available: JSON.parse(document.getElementById('total_minutes_available').textContent),
+
             total_minutes: 0,
             sum_total: 0,
             minutes_available: JSON.parse(document.getElementById('total_minutes_available').textContent),
@@ -139,6 +148,7 @@
             // сертификаты
             num: 0, // последний номер добавленного сертификата
             certs: [],
+            cert_time_selected: 0,
 
             // депозит
             deposit_selected: 0,
@@ -211,6 +221,17 @@
             $("#deposit_selected").text(calc.deposit_selected);
         }
 
+         calc.del_li_click = function(id){
+            let li_id = id.replace('del-', '');
+            $(`#${li_id}`).remove();
+            calc.certs = calc.certs.filter(function(e) { return e.id !== Number(li_id.replace('li-', '')) });
+            calc.cert_time_selected = calc.certs.reduce(
+                    function (prev, cert) {
+                        return prev + cert.flightTime;
+                    }, 0
+                );
+        };
+
         $(document).ready(function () {
             $(".nav-tabs a").click(function () {
                 $(this).tab('show');
@@ -229,6 +250,12 @@
 
             {# ОПЛАТА ПО ДЕПОЗИТУ #}
             $("#deposit_checkout").click(function () {
+                if (calc.deposit_selected <= 0 ){
+                    // TODO нормальное оповещение
+                    console.warn("Не набрано депозита для списания");
+                    return;
+                }
+
                 var data = {
                     csrfmiddlewaretoken: CSRF_TOKEN,
                     'order': JSON.stringify({'deposit_selected': calc.deposit_selected}),
@@ -253,8 +280,27 @@
 
             });
 
-            {# ОПЛАТА ПОЛЕТНЫМ ВРЕМЕНЕМ #}
+            {# ПОКУПКА ПОЛЕТНОГО ВРЕМЕНЕМ ПО ТАРИФУ #}
             $("#checkout").click(function () {
+
+                let count = Object.keys(calc.tariffs).reduce(
+                    function (prev, key) {
+                        return prev + calc.tariffs[key].count;
+                    }, 0
+                );
+
+                let sum = Object.keys(calc.tariffs).reduce(
+                    function (prev, key) {
+                        return prev + calc.tariffs[key].total;
+                    }, 0
+                );
+
+                if (sum <= 0 || count <= 0){
+                    // TODO нормальное оповещение
+                    console.warn("Не выбраны тарифы");
+                    return;
+                }
+
                 var data = {
                     csrfmiddlewaretoken: CSRF_TOKEN,
                     'order': JSON.stringify(calc.tariffs),
@@ -282,6 +328,12 @@
 
             {# ОПЛАТА СЕРТИФИКАТОМ #}
             $("#cert_checkout").click(function () {
+                if (calc.certs.length <= 0 ){
+                    // TODO нормальное оповещение
+                    console.warn("Нет добавленных сертификатов");
+                    return;
+                }
+
                 var data = {
                     csrfmiddlewaretoken: CSRF_TOKEN,
                     'order': JSON.stringify(calc.certs),
@@ -327,6 +379,12 @@
                     {#alert("success");#}
                     if (ddd['status'] == 'ok'){
 
+                        // проверка свободного времени
+                        if(calc.cert_time_selected + ddd['flightTime'] > calc.total_minutes_available){
+                            alert("В слоте недостаточно свободного времени");
+                            return;
+                        }
+
                         calc.num += 1;
                         calc.certs.push({
                             id: calc.num,
@@ -335,7 +393,12 @@
                             certificateType: ddd['certificateType']
                         });
 
+                        calc.cert_time_selected += ddd['flightTime'];
+
                         $("#bucket").append(`<li id="li-${calc.num}" class="list-group-item">${ddd['certificateType']} - ${ddd['number']} ${ddd['flightTime']} мин.<button id="del-li-${calc.num}" type="button" class="ml-2 mb-1 close">&times;</button></li>`);
+                        $(`#del-li-${calc.num}`).click(function () {
+                            calc.del_li_click(this.id);
+                        });
                     }
 
                 })

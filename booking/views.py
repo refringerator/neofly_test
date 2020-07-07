@@ -1,5 +1,6 @@
 import calendar
-from datetime import datetime
+import locale
+from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
@@ -19,13 +20,22 @@ def index(request):
 
 
 def date_selection(request, year=None, month=None):
+    current_date = timezone.now()
     if month and year:
         try:
-            date_in_month = datetime(year=year, month=month, day=1)
+            date_in_month = timezone.make_aware(datetime(year=year, month=month, day=1))
         except ValueError:
-            date_in_month = timezone.now()
+            date_in_month = current_date
     else:
-        date_in_month = timezone.now()
+        date_in_month = current_date
+
+    days_in_month = lambda dt: calendar.monthrange(dt.year, dt.month)[1]
+    # today = date.today()
+    first_day_in_next_month = current_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=date_in_month.tzinfo) + timedelta(days_in_month(current_date))
+    print(first_day_in_next_month)
+
+    # first_day_in_next_month = (current_date + timedelta(weeks=4))(day=1)
+    prev_month_unavailable = date_in_month < first_day_in_next_month
 
     items = get_available_dates(date_in_month, user_id=get_user_id(request))
     dates = available_dates_to_dict(items)
@@ -45,12 +55,18 @@ def date_selection(request, year=None, month=None):
                          'style': 'btn-outline-danger' if day.weekday() >= 5 else 'btn-outline-secondary',
                          })
 
+    # locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+    month_name = date_in_month.strftime('%B')
+    # locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
+
     context = {
         'booking_data': weeks,
-        'month_name': date_in_month.strftime('%B'),
+        'month_name': month_name,
         'month': date_in_month.date().isoformat(),
-        # 'form': form,
+        'button_disabled': 'disabled' if prev_month_unavailable else '',
+        'submenu': get_submenu('flight'),
     }
+
     return render(request, 'booking/date_selection.html', context)
 
 
@@ -63,21 +79,22 @@ def time_selection(request, year=None, month=None, day=None):
     items = get_available_slots(date, user_id=get_user_id(request))
 
     slots = []
-    for slot in items.availableElement:
-        slots.append(
-            {
-                'date': slot.startDate,
-                'time': f"{slot.startDate.strftime('%Y-%m-%dT%H:%M:%S')}",
-                'minutesAvailable': slot.minutesAvailable,
-                'description': slot_name(slot),
-                'disabled': 'disabled' if slot.minutesAvailable < 2 else '',
-                'style': 'btn-outline-warning' if 0 < slot.minutesAvailable < 30 else 'btn-outline-secondary',
-            }
-        )
+    if items:
+        for slot in items.availableElement:
+            slots.append(
+                {
+                    'date': slot.startDate,
+                    'time': f"{slot.startDate.strftime('%Y-%m-%dT%H:%M:%S')}",
+                    'minutesAvailable': slot.minutesAvailable,
+                    'description': slot_name(slot),
+                    'disabled': 'disabled' if slot.minutesAvailable < 2 else '',
+                    'style': 'btn-outline-warning' if 0 < slot.minutesAvailable < 30 else 'btn-outline-secondary',
+                }
+            )
 
     context = {
         'slots': slots,
-        # 'form': form,
+        'submenu': get_submenu('flight'),
     }
     return render(request, 'booking/time_selection.html', context)
 
@@ -92,26 +109,29 @@ def payment_method_selection(request, time=None):
     res = get_available_tariffs(slot_time=date, user_id=get_user_id(request))
     minutes_available = res.minutesAvailable
     tariffs = {}
-    for element in res.Items.availableTariff:
-        tariffs[element.tariffId] = {
-            'count': 0,
-            'total': 0,
-            'id': element.tariffId,
-            'name': element.name,
-            'step': element.step,
-            'min_time': element.minTime,
-            'price': [{'from': it['from'],
-                       'to': it.to,
-                       'pr': it.price
-                       }
-                      for it in element.tariffDetails.detail]
-        }
+    if res.Items:
+        for element in res.Items.availableTariff:
+            tariffs[element.tariffId] = {
+                'count': 0,
+                'total': 0,
+                'id': element.tariffId,
+                'name': element.name,
+                'step': element.step,
+                'min_time': element.minTime,
+                'price': [{'from': it['from'],
+                           'to': it.to,
+                           'pr': it.price
+                           }
+                          for it in element.tariffDetails.detail]
+            }
 
     context = {
         'tariffs': tariffs,
         'minutes_available': minutes_available,
         'booking_date': time,
+        'booking_date_as_dt': date,
         'deposit_minutes': request.user.deposit_minutes,
+        'submenu': get_submenu('flight'),
     }
     return render(request, 'booking/payment_method_selection.html', context)
 
@@ -124,6 +144,7 @@ def buy_certificate(request):
     context = {
         'head': head,
         'rows': rows,
+        'submenu': get_submenu('flight'),
     }
     return render(request, 'booking/certificate.html', context=context)
 
@@ -150,7 +171,7 @@ def order_confirmation(request):
 
     elif order_type == 'buy_deposit':
         pass
-        # values = data.values()
+        # Пока не покупаем на сайте депозит
 
     elif order_type == 'flight_certificate':
         for cert in data:
@@ -175,7 +196,10 @@ def order_confirmation(request):
             total += row_total
 
     # запрос у 1с на правильность расчета суммы по параметрам
-    order_id = create_order(user_id=get_user_id(request), order_type=order_type, data=data, booking_date=booking_date)
+    order_id = create_order(user_id=get_user_id(request),
+                            order_type=order_type,
+                            data=data,
+                            booking_date=booking_date)
 
     # сохраняем заказ в бд, присваиваем идентификатор
     order = Order.objects.create(sum=total,
@@ -217,7 +241,7 @@ def order_confirmation_without_payment(request, order_id):
     order.save()
 
     # находим заказ и подтверждаем в 1с
-    response = confirm_order(order_id, total=0, user_id=get_user_id(request))
+    response = confirm_order(order_id, total=0, user_id=get_user_id(request), order_id=order_id)
 
     if response['status'] == 1:
         order = Order.objects.get(order_id=order_id)
