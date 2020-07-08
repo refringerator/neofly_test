@@ -11,7 +11,6 @@ from booking.utils import get_submenu
 from .forms import RegisterForm
 
 
-
 @login_required()
 def certificates(request):
     certs = Certificate.objects.filter(owner=request.user, is_used=False)
@@ -19,7 +18,7 @@ def certificates(request):
         'certificates': certs,
         'submenu': get_submenu('lk'),
     }
-    return render(request, 'booking/certificates.html', context)
+    return render(request, 'lk/certificates.html', context)
 
 
 @login_required()
@@ -29,7 +28,7 @@ def flight_records(request):
         'flights': flights,
         'submenu': get_submenu('lk'),
     }
-    return render(request, 'booking/flights.html', context)
+    return render(request, 'lk/flights.html', context)
 
 
 @login_required()
@@ -39,7 +38,7 @@ def orders(request):
         'orders': order_list,
         'submenu': get_submenu('lk'),
     }
-    return render(request, 'booking/orders.html', context)
+    return render(request, 'lk/orders.html', context)
 
 
 class Logout(views.LogoutView):
@@ -48,7 +47,7 @@ class Logout(views.LogoutView):
 
 def login_page(request):
     context = {'otp_length': settings.PHONE_LOGIN_OTP_LENGTH}
-    return render(request, 'booking/login.html', context)
+    return render(request, 'lk/login.html', context)
 
 
 @login_required()
@@ -74,7 +73,7 @@ def additional_info_page(request):
     }
 
     context = {'form': form}
-    return render(request, 'booking/modal_register.html', context)
+    return render(request, 'lk/modal_register.html', context)
 
 
 @login_required()

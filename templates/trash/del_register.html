@@ -1,0 +1,31 @@
+{% extends 'booking/../base/main.html' %}
+
+{% block title %}Выбор времени{% endblock %}
+
+{% block body %}
+    <div class="container mt-3">
+        <h2>REGISTER</h2>
+        <br>
+    </div>
+<style>
+.btn{
+    margin-bottom: 5px;
+    }
+</style>
+
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column">
+                <style>input#id_surname {background-color: #e2e2e2;}</style>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    {{ form.as_ul }}
+                    <input type="submit" value="Submit">
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

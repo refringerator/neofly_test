@@ -1,11 +1,11 @@
-{% extends 'booking/main.html' %}
+{% extends 'base/main.html' %}
 
 {% block title %}Выбор времени{% endblock %}
 
 {% block body %}
     <div class="top-block">
-        <div class="page-title">Выберите время полета</div>
-        <button class="btn btn--bd-light-blue btn--default btn--arrow-left btn-back">Вернуться назад</button>
+        <div class="page-title">Выбор даты полета</div>
+        <button class="btn btn--bd-light-blue btn--default btn--arrow-left btn-back" onclick="window.history.back();">Вернуться назад</button>
     </div>
 
     <div class="content-wrap">
@@ -24,15 +24,4 @@
         {% endif %}
     </div>
 
-{% endblock %}
-
-{% block jscript %}
-    <script>
-        let cur_month;
-        $(document).ready(function () {
-            $('.btn-back').on('click', function () {
-                window.history.back();
-            });
-        })
-    </script>
 {% endblock %}

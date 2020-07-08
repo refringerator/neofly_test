@@ -1,0 +1,130 @@
+{% extends 'base/main.html' %}
+
+{% block title %}Выбор сертификата{% endblock %}
+
+{% block body %}
+    <div class="top-block">
+        <div class="page-title">Выбор сертификата</div>
+        <button class="btn btn--bd-light-blue btn--default btn--arrow-left btn-back" onclick="window.history.back();">
+            Вернуться назад
+        </button>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <div class="container">
+                <table class="table table-borderless table-striped">
+                    <thead>
+                    <tr>
+                        <td>Категория \ Полетное время</td>
+                        {% for name in head %}
+                            <td>{{ name }} мин.</td>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for name, prices in rows.items %}
+                        <tr class="{{ name }}">
+                            <td>{{ name }}</td>
+                            {% for price in prices %}
+                                <td id="{{ name }}">
+                                    <button value="{{ price.flight_time }}" type="button" class="btn_cntrl btn btn-outline-secondary" {{ price.disabled }}
+                                            style="width: 100%">{{ price.price }}</button>
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <ul id="bucket" class="list-group">
+        </ul>
+    </div>
+
+    <div>
+        <br>
+        <button id="checkout" class="btn btn-info active">Перейти к оплате</button>
+    </div>
+{% endblock %}
+
+{% block jscript %}
+    {{ rows|json_script:"tariffs" }}
+    <script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
+
+    <script>
+        calc = {
+            num: 0,
+            cart: [],
+            sum_total: 0,
+            tariffs: JSON.parse(document.getElementById('tariffs').textContent)
+
+        };
+
+        calc.button_click = function(cert_type, button_text, min){
+            if(calc.cart.length >= 10){
+                alert("Корзина переполнена!")
+                return;
+            }
+
+            var price = Number(button_text) || 0;
+            if(price<=0){
+                return;
+            }
+
+            calc.num += 1;
+            calc.cart.push({
+                id: calc.num,
+                name: cert_type,
+                count: min,
+                total: price
+            });
+
+            $("#bucket").append(`<li id="li-${calc.num}" class="list-group-item">${cert_type} ${min} мин. за ${price}<button id="del-li-${calc.num}" type="button" class="ml-2 mb-1 close">&times;</button></li>`);
+            $(`#del-li-${calc.num}`).click(function () {
+                calc.del_li_click(this.id);
+            });
+
+            calc.total += price;
+        };
+
+        calc.del_li_click = function(id){
+            var li_id = id.replace('del-', '');
+            $(`#${li_id}`).remove();
+            calc.cart = calc.cart.filter(function(e) { return e.id !== Number(li_id.replace('li-', '')) });
+        };
+
+        $(document).ready(function () {
+            $(".btn_cntrl").click(function () {
+                calc.button_click(this.parentElement.id, this.innerText, this.value);
+            });
+
+            $("#checkout").click(function () {
+                var data = {
+                    csrfmiddlewaretoken: CSRF_TOKEN,
+                    'order': JSON.stringify(calc.cart),
+                    'order_type': 'buy_certificate'
+                }
+
+                var jqxhr = $.post("{% url 'order_confirmation' %}", data, function (ddd) {
+                    {#alert("success");#}
+                    $("#my-modal-window").html(ddd);
+                    $('#myModal').modal('show')
+                })
+                    .done(function () {
+                        {#alert("second success");#}
+                    })
+                    .fail(function () {
+                        {#alert("error");#}
+                    })
+                    .always(function () {
+                        {#alert("finished");#}
+                    });
+            });
+        });
+    </script>
+
+{% endblock %}

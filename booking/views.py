@@ -99,7 +99,6 @@ def time_selection(request, year=None, month=None, day=None):
     return render(request, 'booking/time_selection.html', context)
 
 
-@login_required(login_url='login')
 def payment_method_selection(request, time=None):
     try:
         date = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S')
@@ -130,7 +129,7 @@ def payment_method_selection(request, time=None):
         'minutes_available': minutes_available,
         'booking_date': time,
         'booking_date_as_dt': date,
-        'deposit_minutes': request.user.deposit_minutes,
+        'deposit_minutes': request.user.deposit_minutes if request.user.is_authenticated else False,
         'submenu': get_submenu('flight'),
     }
     return render(request, 'booking/payment_method_selection.html', context)
@@ -146,11 +145,13 @@ def buy_certificate(request):
         'rows': rows,
         'submenu': get_submenu('flight'),
     }
-    return render(request, 'booking/certificate.html', context=context)
+    return render(request, 'booking/buy_certificate.html', context=context)
 
 
-@login_required()
 def order_confirmation(request):
+    if not request.user.is_authenticated:
+        return render(request, 'lk/modal_login_required.html', context={})
+
     # Проверка юзера на заполненность
     if not request.user.last_name or not request.user.first_name:
         return additional_info_page(request)
@@ -227,8 +228,14 @@ def order_confirmation(request):
     return render(request, template_name, context=context)
 
 
-@login_required(login_url='login')
 def order_confirmation_without_payment(request, order_id):
+    if not request.user.is_authenticated:
+        return render(request, 'lk/modal_login_required.html', context={})
+
+    # Проверка юзера на заполненность
+    if not request.user.last_name or not request.user.first_name:
+        return additional_info_page(request)
+
     # проверки, что заказ то, что надо, и юзер тот
     order = Order.objects.get(order_id=order_id)
     if order.owner != request.user:
@@ -279,7 +286,7 @@ def success_payment(request, url_type):
             'title': 'Ошибка при оплате заказа!',
             'message': 'При оплате заказа произошла ошибка',
         }
-        return render(request, 'booking/info.html', context=context)
+        return render(request, 'booking/../templates/base/info.html', context=context)
 
     # Успешная оплата
     robokassa_check_crc(request, url_type)

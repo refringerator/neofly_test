@@ -1,10 +1,16 @@
-{% extends 'booking/main.html' %}
+{% extends 'base/main.html' %}
 
 {% block body %}
     <div id="my-modal-window"></div>
+    <div class="top-block">
+        <div class="page-title">Выбор способа оплаты</div>
+        <button class="btn btn--bd-light-blue btn--default btn--arrow-left btn-back" onclick="window.history.back();">
+            Вернуться назад
+        </button>
+    </div>
+
     <div class="container mt-3">
-        <h2>Выбор способа оплаты</h2>
-        <h3>Дата бронирования {{ booking_date_as_dt|date:'d.m.Y H:i' }}</h3>
+       <h3>Дата бронирования {{ booking_date_as_dt|date:'d.m.Y H:i' }}</h3>
         <br>
         <!-- Nav tabs -->
         <ul class="nav nav-tabs">
