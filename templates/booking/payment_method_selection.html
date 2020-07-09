@@ -1,4 +1,5 @@
 {% extends 'base/main.html' %}
+{% load static %}
 
 {% block body %}
     <div id="my-modal-window"></div>
@@ -84,9 +85,14 @@
                 <h3>Оплатить сертификатом</h3>
                 <p>Введите номер сертификата, который хотите использовать</p>
                 <p>Можно добавить несколько сертификатов на полет общей продолжительностью не более чем {{ minutes_available }} мин.</p>
-                <style>input {background-color: #e2e2e2;}</style>
-                <input type="text" id="cert_number" name="cert_number">
-                <button id="cert_add" class="btn btn-info active">+</button>
+                <div class="container" style="display: flex;">
+                    <style>input {background-color: #e2e2e2;}</style>
+                    <input type="text" id="cert_number" name="cert_number" placeholder="010120-123456">
+                    <button id="cert_add" class="btn btn-info active">+</button>
+                </div>
+
+                <div id="errors" class="container"></div>
+
                 <div class="container">
                     <ul id="bucket" class="list-group">
                     </ul>
@@ -135,6 +141,9 @@
 {% endblock %}
 
 {% block jscript %}
+    <script src="{% static 'js/dist/cleave.min.js' %}"></script>
+    <script src="{% static 'js/dist/addons/cleave-phone.ru.js' %}"></script>
+
     {{ tariffs|json_script:"tariffs" }}
     {{ minutes_available|json_script:"total_minutes_available" }}
     {{ booking_date|json_script:"booking_date" }}
@@ -227,18 +236,116 @@
             $("#deposit_selected").text(calc.deposit_selected);
         }
 
-         calc.del_li_click = function(id){
-            let li_id = id.replace('del-', '');
-            $(`#${li_id}`).remove();
-            calc.certs = calc.certs.filter(function(e) { return e.id !== Number(li_id.replace('li-', '')) });
-            calc.cert_time_selected = calc.certs.reduce(
-                    function (prev, cert) {
-                        return prev + cert.flightTime;
-                    }, 0
-                );
+         calc.del_li_click = function(id) {
+             let li_id = id.replace('del-', '');
+             $(`#${li_id}`).remove();
+             calc.certs = calc.certs.filter(function (e) {
+                 return e.id !== Number(li_id.replace('li-', ''))
+             });
+             calc.cert_time_selected = calc.certs.reduce(
+                 function (prev, cert) {
+                     return prev + cert.flightTime;
+                 }, 0
+             );
+         }
+
+        calc.check_cert = function () {
+            var new_number = $("#cert_number").val()
+            $("#cert_number").val("")
+            for (var i in calc.certs) {
+                if (calc.certs[i].number == new_number) {
+                    console.log('Already exist in list');
+                    return;
+                    break;
+                }
+            }
+
+            var data = {
+                csrfmiddlewaretoken: CSRF_TOKEN,
+                'cert_number': new_number
+            }
+
+            var jqxhr = $.post("{% url 'cert_check' %}", data, function (ddd) {
+                {#alert("success");#}
+                if (ddd['status'] == 'ok') {
+
+                    // проверка свободного времени
+                    if (calc.cert_time_selected + ddd['flightTime'] > calc.total_minutes_available) {
+                        $("#errors").append(`<div class="alert alert-warning alert-dismissible"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Ошибка!</strong> В слоте недостаточно свободного времени</div>`);
+                        return;
+                    }
+
+                    calc.num += 1;
+                    calc.certs.push({
+                        id: calc.num,
+                        number: ddd['number'],
+                        flightTime: ddd['flightTime'],
+                        certificateType: ddd['certificateType']
+                    });
+
+                    calc.cert_time_selected += ddd['flightTime'];
+
+                    $("#bucket").append(`<li id="li-${calc.num}" class="list-group-item">${ddd['certificateType']} - ${ddd['number']} ${ddd['flightTime']} мин.<button id="del-li-${calc.num}" type="button" class="ml-2 mb-1 close">&times;</button></li>`);
+                    $(`#del-li-${calc.num}`).click(function () {
+                        calc.del_li_click(this.id);
+                    });
+                }
+                else if (ddd['status'] == 'error'){
+                    // сообщение об ошибке
+                    $("#errors").append(`<div class="alert alert-danger alert-dismissible"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Ошибка!</strong> ${ddd['description']}</div>`);
+                }
+
+            })
+                .done(function () {
+                    {#alert("second success");#}
+                })
+                .fail(function () {
+                    {#alert("error");#}
+                })
+                .always(function () {
+                    {#alert("finished");#}
+                });
+
+
+
+        };
+
+        calc.cert_checkout = function () {
+            if (calc.certs.length <= 0) {
+                // TODO нормальное оповещение
+                console.warn("Нет добавленных сертификатов");
+                return;
+            }
+            var data = {
+                csrfmiddlewaretoken: CSRF_TOKEN,
+                'order': JSON.stringify(calc.certs),
+                'booking_date': document.getElementById('booking_date').textContent,
+                'order_type': 'flight_certificate'
+            }
+            var jqxhr = $.post("{% url 'order_confirmation' %}", data, function (ddd) {
+                {#alert("success");#}
+                $("#my-modal-window").html(ddd);
+                $('#myModal').modal('show')
+            })
+                .done(function () {
+                    {#alert("second success");#}
+
+                })
+                .fail(function () {
+                    {#alert("error");#}
+                })
+                .always(function () {
+                    {#alert("finished");#}
+                });
         };
 
         $(document).ready(function () {
+            var el_phone = new Cleave('#cert_number', {
+                numericOnly: true,
+                blocks: [6, 6],
+                delimiters: ["-"]
+            });
+
             $(".nav-tabs a").click(function () {
                 $(this).tab('show');
             });
@@ -334,90 +441,19 @@
 
             {# ОПЛАТА СЕРТИФИКАТОМ #}
             $("#cert_checkout").click(function () {
-                if (calc.certs.length <= 0 ){
-                    // TODO нормальное оповещение
-                    console.warn("Нет добавленных сертификатов");
+                console.log($("#cert_number").val());
+                if ($("#cert_number").val().length > 0){
+                    $("#cert_add").click();
+                    setTimeout(calc.cert_checkout, 1000);
                     return;
                 }
 
-                var data = {
-                    csrfmiddlewaretoken: CSRF_TOKEN,
-                    'order': JSON.stringify(calc.certs),
-                    'booking_date': document.getElementById('booking_date').textContent,
-                    'order_type': 'flight_certificate'
-                }
-                var jqxhr = $.post("{% url 'order_confirmation' %}", data, function (ddd) {
-                    {#alert("success");#}
-                    $("#my-modal-window").html(ddd);
-                    $('#myModal').modal('show')
-                })
-                    .done(function () {
-                        {#alert("second success");#}
-
-                    })
-                    .fail(function () {
-                        {#alert("error");#}
-                    })
-                    .always(function () {
-                        {#alert("finished");#}
-                    });
-
+                calc.cert_checkout();
             });
 
             {# ДОБАВЛЕНИЕ СЕРТИФИКАТОВ #}
             $("#cert_add").click(function () {
-                var new_number = $("#cert_number").val()
-                $("#cert_number").val("")
-                for (var i in calc.certs) {
-                    if (calc.certs[i].number == new_number) {
-                        console.log('Already exist in list');
-                        return;
-                        break;
-                    }
-                }
-
-                var data = {
-                    csrfmiddlewaretoken: CSRF_TOKEN,
-                    'cert_number': new_number
-                }
-
-                var jqxhr = $.post("{% url 'cert_check' %}", data, function (ddd) {
-                    {#alert("success");#}
-                    if (ddd['status'] == 'ok'){
-
-                        // проверка свободного времени
-                        if(calc.cert_time_selected + ddd['flightTime'] > calc.total_minutes_available){
-                            alert("В слоте недостаточно свободного времени");
-                            return;
-                        }
-
-                        calc.num += 1;
-                        calc.certs.push({
-                            id: calc.num,
-                            number: ddd['number'],
-                            flightTime: ddd['flightTime'],
-                            certificateType: ddd['certificateType']
-                        });
-
-                        calc.cert_time_selected += ddd['flightTime'];
-
-                        $("#bucket").append(`<li id="li-${calc.num}" class="list-group-item">${ddd['certificateType']} - ${ddd['number']} ${ddd['flightTime']} мин.<button id="del-li-${calc.num}" type="button" class="ml-2 mb-1 close">&times;</button></li>`);
-                        $(`#del-li-${calc.num}`).click(function () {
-                            calc.del_li_click(this.id);
-                        });
-                    }
-
-                })
-                    .done(function () {
-                        {#alert("second success");#}
-                    })
-                    .fail(function () {
-                        {#alert("error");#}
-                    })
-                    .always(function () {
-                        {#alert("finished");#}
-                    });
-
+                calc.check_cert();
             });
 
             var tariff;

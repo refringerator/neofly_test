@@ -205,3 +205,8 @@ if env.bool('USE_SENTRY'):
         send_default_pii=True
     )
 
+# RABBIT
+RABBIT_SERVER = env('RABBIT_SERVER')
+RABBIT_USER = env('RABBIT_USER')
+RABBIT_PASS = env('RABBIT_PASS')
+RABBIT_VHOST = env('RABBIT_VHOST')

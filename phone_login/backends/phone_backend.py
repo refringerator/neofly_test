@@ -1,4 +1,5 @@
 import datetime
+import json
 import uuid
 
 from django.conf import settings
@@ -7,6 +8,9 @@ from django.contrib.auth.backends import ModelBackend
 
 from ..models import PhoneToken
 from ..utils import model_field_attr
+
+
+import pika
 
 from accounts.tasks import update_users_info
 
@@ -79,12 +83,21 @@ class PhoneBackend(ModelBackend):
                     **extra_fields
                 )
                 # задача подтянуть данные из 1с
-                # from booking.utils import update_user_info
-                # # update_users_info.delay(user_id=user.id)
-                # # try:
-                # update_user_info(phone_number=str(phone_token.phone_number), user_id=user.id)
-                # # except:
-                #     print("Что-то пошло не так при создании пользователя")
+                # credentials = pika.PlainCredentials(settings.RABBIT_USER, settings.RABBIT_PASS)
+                # parameters = pika.ConnectionParameters(settings.RABBIT_SERVER, credentials=credentials,
+                #                                        virtual_host=settings.RABBIT_VHOST)
+                # connection = pika.BlockingConnection(parameters)
+                # channel = connection.channel()
+                # channel.queue_declare(queue="new_user", durable=True)
+                # message = {'user_id': user.id, 'phone_number': str(phone_token.phone_number)}
+                # channel.basic_publish(exchange='', routing_key="new_user", body=json.dumps(message))
+
+                from booking.utils import update_user_info
+                # update_users_info.delay(user_id=user.id)
+                try:
+                    update_user_info(phone_number=str(phone_token.phone_number), user_id=user.id)
+                except:
+                    print("Что-то пошло не так при создании пользователя")
 
             phone_token.used = True
             phone_token.attempts = phone_token.attempts + 1

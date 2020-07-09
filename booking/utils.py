@@ -211,3 +211,21 @@ def get_submenu(kind):
         submenu.append({'name': 'Полеты', 'url': reverse('flights')})
 
     return submenu
+
+
+def get_month_name(month_name):
+    d = {'January': 'Январь',
+         'February': 'Февраль',
+         'March': 'Март',
+         'April': 'Апрель',
+         'May': 'Май',
+         'June': 'Июнь',
+         'July': 'Июль',
+         'August': 'Август',
+         'September': 'Сентябрь',
+         'October': 'Октябрь',
+         'November': 'Ноябрь',
+         'December': 'Декабрь'
+         }
+
+    return d.get(month_name, month_name)

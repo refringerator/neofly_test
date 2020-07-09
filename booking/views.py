@@ -29,12 +29,14 @@ def date_selection(request, year=None, month=None):
     else:
         date_in_month = current_date
 
+    if date_in_month < current_date:
+        date_in_month = current_date
+
     days_in_month = lambda dt: calendar.monthrange(dt.year, dt.month)[1]
     # today = date.today()
-    first_day_in_next_month = current_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=date_in_month.tzinfo) + timedelta(days_in_month(current_date))
-    print(first_day_in_next_month)
+    first_day_in_next_month = current_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0,
+                                                   tzinfo=date_in_month.tzinfo) + timedelta(days_in_month(current_date))
 
-    # first_day_in_next_month = (current_date + timedelta(weeks=4))(day=1)
     prev_month_unavailable = date_in_month < first_day_in_next_month
 
     items = get_available_dates(date_in_month, user_id=get_user_id(request))
@@ -55,13 +57,10 @@ def date_selection(request, year=None, month=None):
                          'style': 'btn-outline-danger' if day.weekday() >= 5 else 'btn-outline-secondary',
                          })
 
-    # locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
-    month_name = date_in_month.strftime('%B')
-    # locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
 
     context = {
         'booking_data': weeks,
-        'month_name': month_name,
+        'month_name': get_month_name(date_in_month.strftime('%B')),
         'month': date_in_month.date().isoformat(),
         'button_disabled': 'disabled' if prev_month_unavailable else '',
         'submenu': get_submenu('flight'),
@@ -278,15 +277,28 @@ def order_confirmation_without_payment(request, order_id):
 
 
 def success_payment(request, url_type):
-    print('Payment result: ', url_type)
+    print('Payment result: ', url_type, request.user)
 
     # Ошибка оплаты, перенаправляем домой
     if url_type == 'fail':
         context = {
             'title': 'Ошибка при оплате заказа!',
             'message': 'При оплате заказа произошла ошибка',
+            'submenu': get_submenu('flight'),
         }
-        return render(request, 'booking/../templates/base/info.html', context=context)
+        return render(request, 'base/info.html', context=context)
+
+    if request.user.is_authenticated and url_type == 'success':
+        context = {
+            'title': 'Благодарим за покупку!',
+            'message_html': 'Номер приобретенного сертификата можно узнать на странице '
+                            '<a href="' + reverse('certificates') + '">мои сертификаты</a>'
+                            ', <br>ознакомится с предстоящими полетами на странице '
+                            '<a href="' + reverse('flights') + '">полеты</a>.',
+            'message': '',
+            'submenu': get_submenu('lk'),
+        }
+        return render(request, 'base/info.html', context=context)
 
     # Успешная оплата
     robokassa_check_crc(request, url_type)
@@ -321,4 +333,4 @@ def check_cert(request):
 
         except:
             pass
-    return JsonResponse({'status': 'error'})
+    return JsonResponse({'status': 'error', 'description': 'Ошибка проверки сертификата'})

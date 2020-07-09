@@ -11,9 +11,13 @@
 
     <div class="content-wrap">
 
-        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+        <div class="container">
+        <div class="btn-group" role="group" aria-label="Button group with nested dropdown" style="margin-left: auto; margin-right: auto;">
+            {% if not button_disabled %}
             <button id="button_prev" type="button" class="btn btn-light"{{ button_disabled }}>❮</button>
-            <span>{{ month_name }}</span>
+            {% endif %}
+
+            <span {% if button_disabled %}style="margin-left: 39px"{% endif %}>{{ month_name }}</span>
             <button id="button_next" type="button" class="btn btn-light"> ❯</button>
             {#  <div class="btn-group" role="group"> TODO СДЕЛАТЬ ВЫБОР МЕСЯЦА#}
             {#    <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">#}
@@ -25,9 +29,11 @@
             {#    </div>#}
             {#  </div>#}
         </div>
-
-
-        <div class="container">
+        <br>
+{#        </div>#}
+{##}
+{##}
+{#        <div class="container">#}
             {% for week in booking_data %}
                 <div class="btn-group">
                     {% for day in week %}

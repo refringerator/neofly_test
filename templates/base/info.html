@@ -1,11 +1,11 @@
-{% extends 'booking/../base/main.html' %}
+{% extends 'base/main.html' %}
 
-{% block title %}Полеты{% endblock %}
+{% block title %}Информация{% endblock %}
 
 {% block body %}
-    <div class="container mt-3">
-        <h2>{{ title }}</h2>
-        <br>
+    <div class="top-block">
+        <div class="page-title">{{ title }}</div>
+{#        <a class="btn btn--bd-light-red btn--default btn--exit" href="{% url 'logout' %}" data-method="post">Выйти</a>#}
     </div>
 <style>
 .btn{
@@ -17,7 +17,11 @@
     <div class="container">
         <div class="columns">
             <div class="column">
-                <p>{{ message }}</p>
+                {% if message %}
+                    <p>{{ message }}</p>
+                {% else %}
+                    <p>{{ message_html|safe|escape }}</p>
+                {% endif %}
             </div>
         </div>
     </div>

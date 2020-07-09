@@ -140,7 +140,8 @@
                 var min = $el.attr("min_length");
                 if (min) {
                     var opacity = $el.val().length >= min ? 100 : 20;
-                    submit_button.attr("disabled", opacity == 100 ? null : "disabled");
+                    {# TODO недоступность кнопки#}
+                    {#submit_button.attr("disabled", opacity == 100 ? null : "disabled");#}
                     submit_button.css("opacity", opacity / 100);
                 }
             }
@@ -154,7 +155,7 @@
 
                 phone = otp.onlyDigits(phone);
                 phone = '+' + (phone.length===10 ? "7" : "") + phone;
-                $("#phone_number").val(phone);
+                {#$("#phone_number").val(phone);#}
 
                 var jqxhr = $.post("{% url 'generate' %}", {"phone_number": phone}, function (response) {
                     otp.primary_key = response.pk;
