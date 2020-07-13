@@ -60,6 +60,7 @@
                 </div>
 
 
+                <p id="otp_message" hidden class="smaller-text bottom-10">Введите код подтверждения</p>
                 <div class="input-simple-2 bottom-15 disabled">
                     <input type="tel" id="otp" class="font-25 bold" placeholder="9 9 9 9" min_length=7 autocomplete="off" hidden>
                 </div>
@@ -68,7 +69,7 @@
                     <a class="btn btn--default btn--blue" href="#" id="get_otp_button" type="button"  disabled="disabled" style="opacity: 0.2;">Получить одноразовый код</a>
                 </div>
 
-                <p id="otp_message" hidden class="smaller-text bottom-10">Введите номер телефона</p>
+
                 <a href="#" id="login_button" type="button" class="btn btn--default btn--blue" hidden disabled="disabled" style="opacity: 0.2;">Войти</a>
                 <input type="hidden" name="next" value="{{ next }}"/>
                 <input type="hidden" name="order" value="{{ order }}"/>
