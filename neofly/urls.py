@@ -13,7 +13,7 @@ urlpatterns = [
     path('', include('booking.urls')),
     path('phone_login/', include('phone_login.urls')),
     path('api/', include('api.urls')),
-    path('accounts/', include('accounts.urls')),
+    path('account/', include('accounts.urls')),
 
     path('sentry-debug/', trigger_error),
 ]

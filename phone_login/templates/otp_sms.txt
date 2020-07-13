@@ -1,2 +1,2 @@
-{{ otp }} is one time password for login to Mula.
-Ref ID: {{id}}
+Код подтверждения {{ otp }}
+С уважением, NeoFly

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
@@ -56,6 +57,10 @@ class ValidateOTP(CreateAPIView):
                     last_login = user.last_login
                 login(request, user)
                 response = user_detail(user, last_login)
+                # TODO перенести в норм место
+                if order_type := request.session.get('order_type'):
+                    date_time = str(request.session.get('booking_date')).replace('"', '')
+                    response['next'] = reverse('buy_certificate') if order_type == 'buy_certificate' else reverse('payment_method_selection', kwargs={'time': date_time})
                 return Response(response, status=status.HTTP_200_OK)
             except ObjectDoesNotExist:
                 return Response(

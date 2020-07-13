@@ -145,6 +145,21 @@ AUTHENTICATION_BACKENDS = [
 
 ]
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env('REDIS_CACHE_LOCATION'),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "KEY_PREFIX": env('CACHE_PREFIX'),
+    }
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+
+
 LOGIN_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
@@ -163,6 +178,10 @@ SENDSMS_BACKEND = env('SENDSMS_BACKEND')
 SENDSMS_FROM_NUMBER = env('SENDSMS_FROM_NUMBER')
 SENDSMS_ACCOUNT_SID = env('SENDSMS_ACCOUNT_SID')
 SENDSMS_AUTH_TOKEN = env('SENDSMS_AUTH_TOKEN')
+
+SMSC_LOGIN = env('SMSC_LOGIN')
+SMSC_PASSWORD = env('SMSC_PASSWORD')
+SMSC_ONLY_BALANCE = env.bool('SMSC_ONLY_BALANCE')
 
 # PHONE_LOGIN
 PHONE_LOGIN_ATTEMPTS = env.int('PHONE_LOGIN_ATTEMPTS')
@@ -210,3 +229,39 @@ RABBIT_SERVER = env('RABBIT_SERVER')
 RABBIT_USER = env('RABBIT_USER')
 RABBIT_PASS = env('RABBIT_PASS')
 RABBIT_VHOST = env('RABBIT_VHOST')
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'verbose': {
+#             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+#             'style': '{',
+#         },
+#         'simple': {
+#             'format': '{levelname} {asctime} {message}',
+#             'style': '{',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'root': {
+#         'handlers': ['console'],
+#         'level': 'WARNING',
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+#             'propagate': False,
+#         },
+#         'booking': {
+#             'handlers': ['console'],
+#             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+#             'propagate': False,
+#         },
+#     },
+# }

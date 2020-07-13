@@ -17,9 +17,7 @@
 .font-25 {
     font-size: 25px!important;
 }
-{##phone {#}
-{#    padding-left: 45px !important;#}
-{# }#}
+
 .input-simple-2 input {
     border: solid 1px rgba(0,0,0,0.1);
     background-color: transparent;
@@ -58,23 +56,24 @@
 
                 <p class="smaller-text bottom-10">Введите номер телефона</p>
                 <div class="input-simple-2 bottom-15 font-25 bold phone-field">
-                    <input type="tel" id="phone_number" class="font-25 bold" placeholder="+7 999 999 99-99" min_length=14 value="">
+                    <input type="tel" id="phone_number" class="font-25 bold" placeholder="+7 999 999 99-99" min_length=17 value="" autocomplete="off">
                 </div>
 
 
                 <div class="input-simple-2 bottom-15 disabled">
-                    <input type="tel" id="otp" class="font-25 bold" placeholder="9 9 9 9" min_length=7>
+                    <input type="tel" id="otp" class="font-25 bold" placeholder="9 9 9 9" min_length=7 autocomplete="off" hidden>
                 </div>
 
                 <div class="input-group-append">
-                    <button id="get_otp_button" type="button" class="btn btn-outline-secondary">Получить одноразовый
-                        код
-                    </button>
+                    <a class="btn btn--default btn--blue" href="#" id="get_otp_button" type="button"  disabled="disabled" style="opacity: 0.2;">Получить одноразовый код</a>
                 </div>
-{#                <a href="#" step="0" class="btn  btn-sm button submit bg-highlight button-full button-rounded button-s uppercase ultrabold bottom-10 shadow-medium">Отправить</a>#}
 
-                <button id="login_button" type="button" class="btn btn btn-outline-secondary">Войти</button>
+                <p id="otp_message" hidden class="smaller-text bottom-10">Введите номер телефона</p>
+                <a href="#" id="login_button" type="button" class="btn btn--default btn--blue" hidden disabled="disabled" style="opacity: 0.2;">Войти</a>
                 <input type="hidden" name="next" value="{{ next }}"/>
+                <input type="hidden" name="order" value="{{ order }}"/>
+
+                <div id="errors" class="container"></div>
             </form>
         </div>
 
@@ -102,16 +101,21 @@
         }
 
         otp.isValid = function isValid(p) {
-            var phoneRe = /^[2-9]\d{2}[2-9]\d{2}\d{4}$/;
             var digits = otp.onlyDigits(p);
-            {#return phoneRe.test(digits) && digits.length === 10#}
-            {#    || phoneRe.test(digits.substring(1)) && digits.length === 11;#}
             return digits.length === 10 || digits.length === 11
+        }
+        otp.appendError = function appendError(text){
+            $("#errors").append(`<div class="alert alert-danger alert-dismissible">
+<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+<strong>Ошибка!</strong> ${text}</div>`
+            );
+
         }
 
         $(document).ready(function () {
-            {# Подключаем клевер для номера телефона#}
-            var submit_button=$("#login_button");
+            {# Подключаем клевер для номера телефона и одноразового кода#}
+            var get_otp_button=$("#get_otp_button");
+            var login_button=$("#login_button");
             var el_phone = new Cleave('#phone_number', {
                 prefix: '+7',
                 numericOnly: true,
@@ -126,7 +130,8 @@
             var el_input_change = function (e) {
                 apply_button_opacity($(e.target));
                 if (e.which == 13 && submit_button.attr("disabled") == undefined) {
-                    submit_button.click();
+                    //console.log("el input click");
+                    //submit_button.click();
                 }
             };
             $(el_code.element).on("change paste keyup", function (e) {
@@ -141,15 +146,21 @@
                 if (min) {
                     var opacity = $el.val().length >= min ? 100 : 20;
                     {# TODO недоступность кнопки#}
-                    {#submit_button.attr("disabled", opacity == 100 ? null : "disabled");#}
-                    submit_button.css("opacity", opacity / 100);
+                    var btn = $el.attr("id") == "phone_number" ? get_otp_button : login_button;
+                    btn.attr("disabled", opacity == 100 ? null : "disabled");
+                    btn.css("opacity", opacity / 100);
                 }
             }
             {# Кнопка получения разового кода #}
             $("#get_otp_button").click(function () {
+                if (get_otp_button.attr("disabled") == "disabled"){
+                    return;
+                }
+
                 var phone = $("#phone_number").val()
                 if (!otp.isValid(phone)){
-                    alert("Номер телефона недейтсвительный!");
+                    {#alert("Номер телефона недейтсвительный!");#}
+                    otp.appendError("Номер телефона недейтсвительный!");
                     return;
                 }
 
@@ -159,6 +170,15 @@
 
                 var jqxhr = $.post("{% url 'generate' %}", {"phone_number": phone}, function (response) {
                     otp.primary_key = response.pk;
+                    {# Меняем кнопки местами: убираем получение кода, добавляем логин #}
+                    login_button.removeAttr("hidden");
+                    get_otp_button.attr("hidden", "hidden");
+
+                    {# Выключаем ввод номера телефона, покаываем ввод кода #}
+                    $("#phone_number").attr("disabled", "disabled");
+                    $("#otp").removeAttr("hidden");
+                    $("#otp_message").removeAttr("hidden");
+
                     if ('otp' in response){
                         alert(`Одноразовый код: ${response.otp}`)
                     }
@@ -168,7 +188,8 @@
                     })
                     .fail(function (response) {
                         var lol = response
-                        alert(JSON.stringify(response.responseJSON.reason));
+                        otp.appendError(JSON.stringify(response.responseJSON.reason));
+                        {#alert(JSON.stringify(response.responseJSON.reason));#}
                     })
                     .always(function () {
                         {#alert("finished");#}
@@ -177,16 +198,21 @@
 
             {# Кнопка логин #}
             $("#login_button").click(function () {
+                if (login_button.attr("disabled") == "disabled") {
+                    return;
+                }
 
                 if (!otp.isValid($("#phone_number").val())){
-                    alert("Номер телефона недейтсвительный!");
+                    {#alert("Номер телефона недейтсвительный!");#}
+                    otp.appendError("Номер телефона недейтсвительный!");
                     return;
                 }
 
                 var code =  $("#otp").val();
                 code = otp.onlyDigits(code);
                 if (!code.length === otp.otp_length){
-                    alert('Одноразовый код введен не полностью');
+                    otp.appendError("Одноразовый код введен не полностью");
+                    {#alert('Одноразовый код введен не полностью');#}
                     return;
                 }
 
@@ -198,6 +224,10 @@
                 var jqxhr = $.post("{% url 'validate' %}", data, function (ddd) {
                     {#alert("success");#}
                     if(ddd.status === 200){
+                        if ("next" in ddd){
+                            window.location.href = ddd.next;
+                            return;
+                        }
                         const searchString = new URLSearchParams(window.location.search);
                         const url = searchString.get('next');
 
@@ -208,7 +238,7 @@
                         {#alert("second success");#}
                     })
                     .fail(function () {
-                        alert("error");
+                        otp.appendError("Введенный код неверный!");
                     })
                     .always(function () {
                         {#alert("finished");#}

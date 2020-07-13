@@ -1,62 +1,81 @@
-import logging
-import unicodedata
-
-
 from django.conf import settings
-from . import smsc_api
+
+import requests
+import logging
 
 from sendsms.backends.base import BaseSmsBackend
 
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
+SMSC_API_URL = "https://smsc.ru/sys/send.php"
+SMSC_USERNAME = getattr(settings, "SMSC_LOGIN", "")
+SMSC_PASSWORD = getattr(settings, "SMSC_PASSWORD", "")
+SMSC_ONLY_BALANCE = getattr(settings, "SMSC_ONLY_BALANCE", True)
 
 
 class SmsBackend(BaseSmsBackend):
+    def get_username(self):
+        return SMSC_USERNAME
 
+    def get_password(self):
+        return SMSC_PASSWORD
 
-    def __init__(self, fail_silently=False, **kwargs):
-        super(SmsBackend, self).__init__(fail_silently=fail_silently, **kwargs)
-        self.open()
+    def get_cost(self):
+        return "1" if SMSC_ONLY_BALANCE else "3"
 
-    def __del__(self):
-        self.close()
+    def _send(self, message):
+        """
+        Private method to send one message.
 
-    def open(self):
-        """Initializes sms.sluzba.cz API library."""
-        self.client = SmsGateApi(getattr(settings, 'SMS_SLUZBA_API_LOGIN', ''),
-                                 getattr(settings, 'SMS_SLUZBA_API_PASSWORD', ''),
-                                 getattr(settings, 'SMS_SLUZBA_API_TIMEOUT', 2),
-                                 getattr(settings, 'SMS_SLUZBA_API_USE_SSL', True))
+        :param SmsMessage message: SmsMessage class instance.
+        :returns: True if message is sent else False
+        :rtype: bool
+        """
 
-    def close(self):
-        """Cleaning up the reference for sms.sluzba.cz API library."""
-        self.client = None
+        params = {
+            "login": self.get_username(),
+            "psw": self.get_password(),
+            "phones": ",".join(message.to),
+            "mes": message.body,
+            "charset": "utf-8",
+            "fmt": "3",
+            "cost": self.get_cost(),
+        }
+
+        response = requests.get(SMSC_API_URL, params=params)
+        if response.status_code != 200:
+            if not self.fail_silently:
+                raise Exception("Bad status code")
+            else:
+                return False
+
+        resp_json = response.json()
+
+        if 'error' in resp_json:  # Получили ошибку
+            logger.error(f"Ошибка отправки сообщения {resp_json}")
+            if not self.fail_silently:
+                raise Exception("Bad result")
+            else:
+                return False
+
+        if 'cnt' in resp_json:
+            return True
+
+        return False
 
     def send_messages(self, messages):
-        """Sending SMS messages via sms.sluzba.cz API.
-
-        Note:
-          This method returns number of actually sent sms messages
-          not number of SmsMessage instances processed.
-
-        :param messages: list of sms messages
-        :type messages: list of sendsms.message.SmsMessage instances
-        :returns: number of sent sms messages
-        :rtype: int
-
         """
-        count = 0
-        for message in messages:
-            message_body = unicodedata.normalize('NFKD', unicode(message.body)).encode('ascii', 'ignore')
-            for tel_number in message.to:
-                try:
-                    self.client.send(tel_number, message_body, getattr(settings, 'SMS_SLUZBA_API_USE_POST', True))
-                except Exception:
-                    if self.fail_silently:
-                        log.exception('Error while sending sms via sms.sluzba.cz backend API.')
-                    else:
-                        raise
-                else:
-                    count += 1
+        Send messages.
 
-        return count
+        :param list messages: List of SmsMessage instances.
+        :returns: number of messages sended successful.
+        :rtype: int
+        """
+        counter = 0
+        for message in messages:
+            res = self._send(message)
+            if res:
+                counter += 1
+
+        return counter

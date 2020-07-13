@@ -30,7 +30,7 @@
                             <td>{{ fl.flight_date }}</td>
                             <td>{{ fl.flight_type }}</td>
                             <td>{{ fl.flight_time }}</td>
-                            <td>{{ fl.is_used }}</td>
+                            <td>{% if fl.is_used %}Отлетан{% else %}Не отлетан{% endif %}</td>
                         </tr>
                     {% endfor %}
                 </table>

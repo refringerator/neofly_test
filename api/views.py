@@ -1,17 +1,12 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.authentication import BasicAuthentication
-from rest_framework.generics import UpdateAPIView
-from rest_framework.mixins import UpdateModelMixin
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 from django.contrib.auth import get_user_model
-
+from django.core.cache import cache
 from booking.models import Certificate, Flights
 from .serializers import UserSerializer, FlightSerializer, CertificateSerializer
-
+import datetime
 
 class UserListView(APIView):
     # authentication_classes = (BasicAuthentication, )
@@ -58,24 +53,17 @@ class UserDetailView(APIView):
         return Response(serializer.data)
 
 
-class CertificateView(viewsets.ReadOnlyModelViewSet):
+class CertificateView(APIView):
     # authentication_classes = (BasicAuthentication, )
     # permission_classes = (IsAuthenticated, )
 
-    def get(self, request, pk=None, remote_record_id=None):
-        if pk:
-            item = get_object_or_404(Certificate, pk=pk)
-        else:
-            item = get_object_or_404(Certificate, remote_record_id=remote_record_id)
+    def get(self, request, cert_number=None):
+        item = get_object_or_404(Certificate, cert_number=cert_number)
         serializer = CertificateSerializer(item)
         return Response(serializer.data)
 
-    def put(self, request, pk=None, remote_record_id=None):
-        if pk:
-            item = get_object_or_404(Certificate, pk=pk)
-        else:
-            item = get_object_or_404(Certificate, remote_record_id=remote_record_id)
-
+    def put(self, request, cert_number=None):
+        item = get_object_or_404(Certificate, cert_number=cert_number)
         serializer = CertificateSerializer(instance=item, data=request.data, partial=True)
 
         if serializer.is_valid(raise_exception=True):
@@ -122,3 +110,14 @@ class FlightDetailView(APIView):
         return Response({'done': True})
 
 
+def clear_cache(request, iso_date_time):
+    print("ОЧИТСКА КЕША")
+    try:
+        date = datetime.datetime.strptime(iso_date_time, '%Y-%m-%d %H:%M:%S')
+    except Exception as e:
+        print(f"ошибка {e}")
+        return
+
+    redis_month_key = f"booking:month#{date.replace(day=1).date().isoformat()}"
+    cache.delete(redis_month_key)
+    return Response({'done': True})

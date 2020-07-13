@@ -338,12 +338,21 @@
                     {#alert("finished");#}
                 });
         };
-
+            calc.el_input_change = function (e) {
+                if (e.which == 13 && e["currentTarget"].value.length == 13) {
+                    //console.log("el input click");
+                    $("#cert_checkout").click();
+                }
+            };
         $(document).ready(function () {
             var el_phone = new Cleave('#cert_number', {
                 numericOnly: true,
                 blocks: [6, 6],
                 delimiters: ["-"]
+            });
+
+            $("#cert_number").on("change paste keyup", function (e) {
+                calc.el_input_change(e);
             });
 
             $(".nav-tabs a").click(function () {

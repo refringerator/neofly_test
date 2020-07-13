@@ -1,18 +1,25 @@
 import calendar
-import locale
-from datetime import datetime, timedelta
+from datetime import datetime
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-from django.utils import timezone
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from rest_framework.utils import json
+
 from accounts.views import additional_info_page
-from .models import *
-from .utils import *
-from .robokassa import *
+from .booking_service import get_available_date, available_dates_in_month
+from .models import Order, Flights
+from .robokassa import robokassa_get_param_str, robokassa_check_crc
+from .utils import get_user_id, get_month_name, get_submenu, \
+    get_available_slots, slot_name, get_available_tariffs, get_available_certificate_types, make_cert_table, \
+    create_order, confirm_order, check_certificate
+
+
+logger = logging.getLogger('django.server')
 
 
 def index(request):
@@ -20,27 +27,9 @@ def index(request):
 
 
 def date_selection(request, year=None, month=None):
-    current_date = timezone.now()
-    if month and year:
-        try:
-            date_in_month = timezone.make_aware(datetime(year=year, month=month, day=1))
-        except ValueError:
-            date_in_month = current_date
-    else:
-        date_in_month = current_date
 
-    if date_in_month < current_date:
-        date_in_month = current_date
-
-    days_in_month = lambda dt: calendar.monthrange(dt.year, dt.month)[1]
-    # today = date.today()
-    first_day_in_next_month = current_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0,
-                                                   tzinfo=date_in_month.tzinfo) + timedelta(days_in_month(current_date))
-
-    prev_month_unavailable = date_in_month < first_day_in_next_month
-
-    items = get_available_dates(date_in_month, user_id=get_user_id(request))
-    dates = available_dates_to_dict(items)
+    date_in_month, prev_month_unavailable, next_month_unavailable = get_available_date(year, month)
+    dates = available_dates_in_month(date_in_month, get_user_id(request))
 
     cal = calendar.Calendar()
     weeks = cal.monthdatescalendar(date_in_month.year, date_in_month.month)
@@ -57,12 +46,12 @@ def date_selection(request, year=None, month=None):
                          'style': 'btn-outline-danger' if day.weekday() >= 5 else 'btn-outline-secondary',
                          })
 
-
     context = {
         'booking_data': weeks,
         'month_name': get_month_name(date_in_month.strftime('%B')),
         'month': date_in_month.date().isoformat(),
-        'button_disabled': 'disabled' if prev_month_unavailable else '',
+        'prev_month_unavailable': prev_month_unavailable,
+        'next_month_unavailable': next_month_unavailable,
         'submenu': get_submenu('flight'),
     }
 
@@ -134,7 +123,6 @@ def payment_method_selection(request, time=None):
     return render(request, 'booking/payment_method_selection.html', context)
 
 
-@login_required()
 def buy_certificate(request):
     certs = get_available_certificate_types(user_id=get_user_id(request))
     head, rows = make_cert_table(certs)
@@ -149,6 +137,9 @@ def buy_certificate(request):
 
 def order_confirmation(request):
     if not request.user.is_authenticated:
+        request.session['order'] = request.POST['order']
+        request.session['order_type'] = request.POST.get('order_type')
+        request.session['booking_date'] = request.POST.get('booking_date', None)
         return render(request, 'lk/modal_login_required.html', context={})
 
     # Проверка юзера на заполненность
@@ -157,11 +148,11 @@ def order_confirmation(request):
 
     data = json.loads(request.POST['order'])
     order_type = request.POST.get('order_type')
+    booking_date = request.POST.get('booking_date', None)
 
     total = 0
     flight_time = 0
     details = []
-    booking_date = request.POST.get('booking_date', None)
 
     if order_type == 'buy_certificate':
         values = data
@@ -246,7 +237,7 @@ def order_confirmation_without_payment(request, order_id):
     order.status = 'confirmed'
     order.save()
 
-    # находим заказ и подтверждаем в 1с
+    # находим заказ и подтверждаем в 1с TODO переделать с invoice и order_id
     response = confirm_order(order_id, total=0, user_id=get_user_id(request), order_id=order_id)
 
     if response['status'] == 1:
@@ -271,13 +262,13 @@ def order_confirmation_without_payment(request, order_id):
                                                 status='payed')
 
     else:
-        print('error with 1c ws')
+        logger.error(f'Ошибка вызова сервиса 1с при подтверждении заказа {order_id=} {order.id=}')
 
     return redirect('flights')
 
 
 def success_payment(request, url_type):
-    print('Payment result: ', url_type, request.user)
+    logger.info(f'Результат подтверждения оплаты: {url_type=} {request.user=}')
 
     # Ошибка оплаты, перенаправляем домой
     if url_type == 'fail':

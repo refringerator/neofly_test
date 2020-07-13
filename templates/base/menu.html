@@ -13,7 +13,8 @@
             <img src="{% static 'img/logo.png' %}" alt="" class="logo__img">
         </a>
     </div>
-    <button class="menu__burger">
+    <button class="menu__burger" onclick="$(this).toggleClass('open'); $('.menu__wrap').toggleClass('open');">
+
         <span></span>
     </button>
     <div class="menu__wrap">

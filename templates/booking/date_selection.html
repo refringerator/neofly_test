@@ -13,11 +13,11 @@
 
         <div class="container">
         <div class="btn-group" role="group" aria-label="Button group with nested dropdown" style="margin-left: auto; margin-right: auto;">
-            {% if not button_disabled %}
+            {% if not prev_month_unavailable %}
             <button id="button_prev" type="button" class="btn btn-light"{{ button_disabled }}>❮</button>
             {% endif %}
 
-            <span {% if button_disabled %}style="margin-left: 39px"{% endif %}>{{ month_name }}</span>
+            <span {% if prev_month_unavailable %}style="margin-left: 39px"{% endif %}>{{ month_name }}</span>
             <button id="button_next" type="button" class="btn btn-light"> ❯</button>
             {#  <div class="btn-group" role="group"> TODO СДЕЛАТЬ ВЫБОР МЕСЯЦА#}
             {#    <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">#}
@@ -48,7 +48,6 @@
             {% endfor %}
         </div>
     </div>
-
 
 {% endblock %}
 

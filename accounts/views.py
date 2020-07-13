@@ -1,9 +1,8 @@
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, logout, views
+from django.contrib.auth import views
 from django.urls import reverse_lazy
-from django.views.decorators.http import require_POST
 from django.conf import settings
 
 from booking.models import Certificate, Order, Flights
@@ -46,7 +45,10 @@ class Logout(views.LogoutView):
 
 
 def login_page(request):
-    context = {'otp_length': settings.PHONE_LOGIN_OTP_LENGTH}
+    context = {
+        'otp_length': settings.PHONE_LOGIN_OTP_LENGTH,
+        'submenu': get_submenu('flight'),
+    }
     return render(request, 'lk/login.html', context)
 
 
@@ -74,12 +76,6 @@ def additional_info_page(request):
 
     context = {'form': form}
     return render(request, 'lk/modal_register.html', context)
-
-
-@login_required()
-def user_logout(request):  # удалить
-    logout(request)
-    return redirect('home')
 
 
 @login_required()
