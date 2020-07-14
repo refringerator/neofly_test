@@ -301,6 +301,9 @@ def success_payment(request, url_type):
 
 @require_POST
 def check_cert(request):
+    one_bad_reason = 'Данный сертификат не действвителен.<br>' \
+                     'Пожалуйста, введите другой номер сертификата или обратитесь в службу поддержки.'
+
     cert_number = request.POST.get('cert_number')
     if cert_number:
         cert_number = cert_number.strip()
@@ -311,7 +314,7 @@ def check_cert(request):
             if cert_data.status == 2:
                 return JsonResponse({
                     'status': 'error',
-                    'description': cert_data['description']
+                    'description': one_bad_reason if one_bad_reason else cert_data['description']
                 })
 
             cert = cert_data['certificate']
@@ -324,4 +327,4 @@ def check_cert(request):
 
         except:
             pass
-    return JsonResponse({'status': 'error', 'description': 'Ошибка проверки сертификата'})
+    return JsonResponse({'status': 'error', 'description': one_bad_reason if one_bad_reason else 'Ошибка проверки сертификата'})
