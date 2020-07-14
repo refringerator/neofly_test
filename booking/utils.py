@@ -61,27 +61,26 @@ def get_available_tariffs(slot_time, user_id):
 
 
 def make_cert_table(certs):
-    fl_time = []
+    flight_time = []
 
-    d = defaultdict(list)
+    certificates = defaultdict(list)
     for cert_data in certs.availableCertificate:
-        d[cert_data.certificateType].append({'flight_time': cert_data.flightTime,
-                                             'price': cert_data.price,
-                                             'disabled': ''
-                                             })
-        fl_time.append(cert_data.flightTime)
+        certificates[cert_data.certificateType].append({'flight_time': cert_data.flightTime,
+                                                        'price': cert_data.price,
+                                                        'disabled': ''
+                                                        })
+        flight_time.append(cert_data.flightTime)
 
-    fl_time.sort()
-    head = set(fl_time)
+    head = set(flight_time)
 
-    for key, value in d.items():
+    for key, value in certificates.items():
         fts = set([v['flight_time'] for v in value])
         for el in head - fts:
-            d[key].append({'flight_time': el, 'price': '-', 'disabled': 'disabled'})
+            certificates[key].append({'flight_time': el, 'price': '-', 'disabled': 'disabled'})
 
-        d[key].sort(key=lambda element: element['flight_time'])
+        certificates[key].sort(key=lambda element: element['flight_time'])
 
-    return head, dict(d)
+    return sorted(head), dict(certificates)
 
 
 def get_user_id(request):
