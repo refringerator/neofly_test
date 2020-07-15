@@ -171,6 +171,9 @@ def update_user_info(phone_number, user_id):
     client = init_soap_client()
     res = client.service.getUserInfo(PhoneNumber=phone_number, UserId=user_id)
     if res.status == 1:
+        if res.lastName == 'Ф' or res.lastName == 'И':
+            return
+
         user_model = get_user_model()
         user = user_model.objects.filter(id=user_id)[0]
         if user:
