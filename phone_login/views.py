@@ -57,9 +57,13 @@ class ValidateOTP(CreateAPIView):
                     last_login = user.last_login
                 login(request, user)
                 response = user_detail(user, last_login)
+
                 # TODO перенести в норм место
+                if not request.user.last_name or not request.user.first_name:
+                    response['need_registration'] = True
+
                 if order_type := request.session.get('order_type'):
-                    date_time = str(request.session.get('booking_date')).replace('"', '')
+                    date_time = str(request.session.get('booking_date')).replace('"', '')  # TODO Убрать кавычки сразу при закладке параметра
                     response['next'] = reverse('buy_certificate') if order_type == 'buy_certificate' else reverse('payment_method_selection', kwargs={'time': date_time})
                 return Response(response, status=status.HTTP_200_OK)
             except ObjectDoesNotExist:

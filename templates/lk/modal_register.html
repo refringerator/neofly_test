@@ -5,7 +5,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalCenterTitle">Мои данные</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button id="modal_close1" type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
@@ -30,8 +30,9 @@
                     </label>
                 </div>
             </div>
+            <div id="modal_errors" class="container"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary active" data-dismiss="modal">Закрыть</button>
+                <button id="modal_close2" type="button" class="btn btn-secondary active" data-dismiss="modal">Закрыть</button>
                 <button type="button" class="btn btn-primary active" onclick="registration.save()">Сохранить</button>
             </div>
         </div>
@@ -39,11 +40,20 @@
 
     <script type="text/javascript"> window.CSRF_TOKEN = "{{ csrf_token }}"; </script>
     <script>
-        registration = {}
+        registration = {
+            next_action: ''
+        }
+        registration.appendError = function appendError(text) {
+            $("#modal_errors").append(`<div class="alert alert-danger alert-dismissible">
+<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+<strong>Ошибка!</strong> ${text}</div>`
+            );
+        }
 
         registration.save = function save_data() {
             if (!$("#confirm").prop("checked")) {
-                alert('Необходимо принять условия');
+                {#alert('Необходимо принять условия');#}
+                registration.appendError('Необходимо принять условия');
                 return;
             }
 
@@ -53,35 +63,34 @@
             var e = $("#id_email").val();
 
             // сохраняем
-               {#var phone = $("#phone_number").val()#}
-               {# if (!otp.isValid(phone)){#}
-               {#     alert("Номер телефона недейтсвительный!");#}
-               {#     return;#}
-               {# }#}
+            data = {
+                "surname": f,
+                "name": i,
+                "email": e,
+                csrfmiddlewaretoken: CSRF_TOKEN
+            }
 
-                data = {
-                    "surname": f,
-                    "name": i,
-                    "email": e,
-                    csrfmiddlewaretoken: CSRF_TOKEN
+            var jqxhr = $.post("{% url 'register' %}", data, function (response) {
+                // закрываем окошко
+                $('#myModal').modal('hide');
+                if (registration.next_action) {
+                    window.location.href = registration.next_action;
                 }
-
-                var jqxhr = $.post("{% url 'register' %}", data, function (response) {
-
+            })
+                .done(function () {
+                    {#alert("second success");#}
                 })
-                    .done(function () {
-                        {#alert("second success");#}
-                    })
-                    .fail(function (response) {
-                        var lol = response
-                        alert('Ошибка сохранения');
-                    })
-                    .always(function () {
-                        {#alert("finished");#}
-                    });
+                .fail(function (response) {
+                    var lol = response
+                    {#alert('Ошибка сохранения');#}
+                    registration.appendError('Ошибка введенных данных');
+                    return;
+                })
+                .always(function () {
+                    {#alert("finished");#}
+                });
 
-            // закрываем окошко
-            $('#myModal').modal('hide');
+
         }
     </script>
 </div>

@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views
@@ -8,6 +8,8 @@ from django.conf import settings
 from booking.models import Certificate, Order, Flights
 from booking.utils import get_submenu
 from .forms import RegisterForm
+
+import requests
 
 
 @login_required()
@@ -66,7 +68,22 @@ def additional_info_page(request):
             user.email = cd['email']
             user.save()
 
+            # пнуть 1c
+            url = settings.SOAP_WSDL.replace('ws/neofly?wsdl', f'hs/neofly/{user.id}/{str(user.phone_number)}/update')
+
+            try:
+                requests.post(url=url, json={
+                                                'last_name': user.last_name,
+                                                'first_name': user.first_name,
+                                                'email': user.email,
+                                            }
+                              , auth=('adm', ''))
+            except:
+                pass
+
             return JsonResponse({'status': 'ok'})
+        else:
+            return HttpResponseBadRequest()
 
     form.data = {
         'email': request.user.email,

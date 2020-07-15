@@ -5,6 +5,7 @@
 {% block title %}Выбор времени{% endblock %}
 
 {% block body %}
+    <div id="my-modal-window"></div>
     <div class="container mt-3">
         <h2>Форма входа</h2>
         <br>
@@ -113,7 +114,55 @@
 
         }
 
+        var login_logic = {
+            next_step: ''
+        }
+        login_logic.logout = function () {
+            $('#myModal').modal('hide');
+            window.location.href = "{% url 'logout' %}";
+        }
+
+        login_logic.check_reg = function (e) {
+            var data = {
+                {#csrfmiddlewaretoken: CSRF_TOKEN,#}
+                {#'order': JSON.stringify(calc.certs),#}
+                {#'booking_date': document.getElementById('booking_date').textContent,#}
+                {#'order_type': 'flight_certificate'#}
+            }
+            var jqxhr = $.get("{% url 'register' %}", data, function (ddd) {
+                {#alert("success");#}
+                $("#my-modal-window").html(ddd);
+
+                // убираем обычную обработку закрывашек
+                $("#modal_close1").removeAttr("data-dismiss");
+                $("#modal_close2").removeAttr("data-dismiss");
+
+                $("#modal_close1").click(login_logic.logout);
+                $("#modal_close2").click(login_logic.logout);
+
+                // добавляем в формчку переход на следующий шаг
+                registration.next_action = login_logic.next_step;
+
+                $('#myModal').modal('show');
+
+
+
+            })
+                .done(function () {
+                    {#alert("second success");#}
+
+                })
+                .fail(function () {
+                    {#alert("error");#}
+                })
+                .always(function () {
+                    {#alert("finished");#}
+                });
+
+        }
         $(document).ready(function () {
+
+
             {# Подключаем клевер для номера телефона и одноразового кода#}
             var get_otp_button=$("#get_otp_button");
             var login_button=$("#login_button");
@@ -152,6 +201,8 @@
                     btn.css("opacity", opacity / 100);
                 }
             }
+
+
             {# Кнопка получения разового кода #}
             $("#get_otp_button").click(function () {
                 if (get_otp_button.attr("disabled") == "disabled"){
@@ -226,13 +277,21 @@
                     {#alert("success");#}
                     if(ddd.status === 200){
                         if ("next" in ddd){
-                            window.location.href = ddd.next;
+                            login_logic.next_step = ddd.next;
+                        }
+                        else {
+                            const searchString = new URLSearchParams(window.location.search);
+                            const url = searchString.get('next');
+                            login_logic.next_step = url ? url : '/';
+                        }
+
+                        // проверяем необходимость регистрации
+                        if ("need_registration" in ddd) {
+                            login_logic.check_reg();
                             return;
                         }
-                        const searchString = new URLSearchParams(window.location.search);
-                        const url = searchString.get('next');
 
-                        window.location.href = url ? url : "/";
+                        window.location.href = login_logic.next_step;
                     }
                 })
                     .done(function () {
