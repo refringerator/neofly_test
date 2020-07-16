@@ -57,9 +57,9 @@ class PhoneNumberUserManager(BaseUserManager):
 
 
 class PhoneNumberUser(AbstractUser):
-    phone_number = PhoneNumberField(unique=True)
-    is_deposit_available = models.BooleanField(default=False)
-    deposit_minutes = models.IntegerField(default=0)
+    phone_number = PhoneNumberField(unique=True, verbose_name='Номер телефона')
+    is_deposit_available = models.BooleanField(default=False, verbose_name='Депозит доступен')
+    deposit_minutes = models.IntegerField(default=0, verbose_name='Минут на депозите')
     objects = PhoneNumberUserManager()
 
     class Meta:
@@ -76,8 +76,8 @@ class PhoneToken(models.Model):
     used = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = "OTP Token"
-        verbose_name_plural = "OTP Tokens"
+        verbose_name = "Одноразовый токен"
+        verbose_name_plural = "Одноразовые токены"
 
     def __str__(self):
         return "{} - {}".format(self.phone_number, self.otp)

@@ -98,3 +98,18 @@ def additional_info_page(request):
 @login_required()
 def lk(request):
     return flight_records(request)
+
+
+@login_required()
+def personal_info(request):
+    u = request.user
+    dep1 = 'Депозит доступен' if u.is_deposit_available else 'Депозит не доступен'
+    dep2 = f'на депозите {u.deposit_minutes} мин.'
+    context = {
+        'fio': f'{u.first_name} {u.last_name}',
+        'email': u.email,
+        'phone': f'{u.phone_number}',
+        'deposit': f'{dep1}, {dep2}',
+        'submenu': get_submenu('lk'),
+    }
+    return render(request, 'lk/personal_info.html', context)

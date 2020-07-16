@@ -8,6 +8,7 @@ from booking.models import Certificate, Flights
 from .serializers import UserSerializer, FlightSerializer, CertificateSerializer
 import datetime
 
+
 class UserListView(APIView):
     # authentication_classes = (BasicAuthentication, )
     # permission_classes = (IsAuthenticated, )

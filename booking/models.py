@@ -3,6 +3,10 @@ from django.contrib.auth import get_user_model
 
 
 class Order(models.Model):
+    class Meta:
+        verbose_name = "Заказ"
+        verbose_name_plural = "Заказы"
+
     ORDER_STATUS = (
         ('payed', 'Оплачен'),
         ('new', 'Новый'),
@@ -31,6 +35,10 @@ class Order(models.Model):
 
 
 class Certificate(models.Model):
+    class Meta:
+        verbose_name = "Сертификат"
+        verbose_name_plural = "Сертификаты"
+
     cert_type = models.CharField(max_length=50, verbose_name="Категория сертификата")
     cert_number = models.CharField(max_length=50, null=True, verbose_name="Номер сертификата")
     flight_time = models.DecimalField(max_digits=3, decimal_places=0, verbose_name="Длительность полета")
@@ -44,6 +52,10 @@ class Certificate(models.Model):
 
 
 class Flights(models.Model):
+    class Meta:
+        verbose_name = "Полет"
+        verbose_name_plural = "Полеты"
+
     FLIGHT_STATUS = (
         ('flied', 'Отлетан'),
         ('payed', 'Оплачен'),

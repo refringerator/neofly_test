@@ -11,5 +11,19 @@ class PhoneTokenAdmin(admin.ModelAdmin):
     readonly_fields = ('phone_number', 'otp', 'timestamp', 'attempts')
 
 
+@admin.register(get_user_model())
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('id', 'phone_number', 'last_name', 'first_name', 'email',
+                    'date_joined', 'is_deposit_available')
+    list_filter = ('is_deposit_available', 'deposit_minutes', 'date_joined')
+    search_fields = (
+        'phone_number',
+        'last_name',
+        'first_name',
+        'email',
+
+    )
+
+
 admin.site.register(PhoneToken, PhoneTokenAdmin)
-admin.site.register(get_user_model())
+
