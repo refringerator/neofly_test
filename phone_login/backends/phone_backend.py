@@ -92,18 +92,18 @@ class PhoneBackend(ModelBackend):
                 # channel.basic_publish(exchange='', routing_key="new_user", body=json.dumps(message))
 
                 # пнуть 1c
-                url = settings.SOAP_WSDL.replace('ws/neofly?wsdl',
-                                                 f'hs/neofly/{user.id}/{str(user.phone_number)}/update')
-
-                try:
-                    requests.post(url=url, json={
-                        'last_name': user.last_name,
-                        'first_name': user.first_name,
-                        'email': user.email,
-                    }
-                                  , auth=('adm', ''))
-                except:
-                    pass
+                # url = settings.SOAP_WSDL.replace('ws/neofly?wsdl',
+                #                                  f'hs/neofly/{user.id}/{str(user.phone_number)}/update')
+                #
+                # try:
+                #     requests.post(url=url, json={
+                #         'last_name': user.last_name,
+                #         'first_name': user.first_name,
+                #         'email': user.email,
+                #     }
+                #                   , auth=('adm', ''))
+                # except:
+                #     pass
 
                 from booking.utils import update_user_info
                 # update_users_info.delay(user_id=user.id)

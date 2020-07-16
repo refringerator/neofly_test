@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
+from django.contrib.auth import get_user_model
 
 from .models import PhoneToken
 from .serializers import (
@@ -59,7 +60,9 @@ class ValidateOTP(CreateAPIView):
                 response = user_detail(user, last_login)
 
                 # TODO перенести в норм место
-                if not request.user.last_name or not request.user.first_name:
+                model_user = get_user_model()
+                u = model_user.objects.get(pk=request.user.id)
+                if not u.last_name or not u.first_name:
                     response['need_registration'] = True
 
                 if order_type := request.session.get('order_type'):
