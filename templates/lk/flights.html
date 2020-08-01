@@ -21,17 +21,19 @@
                 <table class="table table-sm">
                     <tr>
                         <th>Дата полета</th>
+                        <th>Отлетан</th>
                         <th>Тариф</th>
                         <th>Длительность полета</th>
-                        <th>Отлетан</th>
                     </tr>
                     {% for fl in flights %}
+                        {% for detail in fl.details %}
                         <tr>
-                            <td>{{ fl.flight_date }}</td>
-                            <td>{{ fl.flight_type }}</td>
-                            <td>{{ fl.flight_time }}</td>
-                            <td>{% if fl.is_used %}Отлетан{% else %}Не отлетан{% endif %}</td>
+                            {% if forloop.first %}<td rowspan="{{ fl.details|length }}">{{ fl.flight_date }}</td>{% endif %}
+                            {% if forloop.first %}<td rowspan="{{ fl.details|length }}">{% if fl.is_used %}Отлетан{% else %}Не отлетан{% endif %}</td>{% endif %}
+                            <td>{{ detail.flight_type }}</td>
+                            <td>{{ detail.flight_time }}</td>
                         </tr>
+                        {% endfor %}
                     {% endfor %}
                 </table>
             </div>

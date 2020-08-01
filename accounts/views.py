@@ -1,3 +1,5 @@
+import json
+
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -25,8 +27,24 @@ def certificates(request):
 @login_required()
 def flight_records(request):
     flights = Flights.objects.filter(owner=request.user)
+
+    fls = []
+    for f in flights:
+        try:
+            dat = json.loads(f.flight_data)
+        except json.JSONDecodeError:
+            dat = []
+        except TypeError:
+            dat = []
+
+        fls.append({
+            'flight_date': f.flight_date,
+            'is_used': f.is_used,
+            'details': dat,
+        })
+
     context = {
-        'flights': flights,
+        'flights': fls,
         'submenu': get_submenu('lk'),
     }
     return render(request, 'lk/flights.html', context)
