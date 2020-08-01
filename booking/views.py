@@ -15,8 +15,7 @@ from .models import Order, Flights
 from .robokassa import robokassa_get_param_str, robokassa_check_crc
 from .utils import get_user_id, get_month_name, get_submenu, \
     get_available_slots, slot_name, get_available_tariffs, get_available_certificate_types, make_cert_table, \
-    create_order, confirm_order, check_certificate
-
+    create_order, confirm_order, check_certificate, create_flight_by_response
 
 logger = logging.getLogger('django.server')
 
@@ -256,27 +255,12 @@ def order_confirmation_without_payment(request, order_id):
 
     if response['status'] == 1:
         order = Order.objects.get(order_id=order_id)
-        details = json.loads(response['description'])
 
         if order.type in ['flight_certificate', 'flight_deposit']:
-            for flight in details:
-                possible_fl = Flights.objects.filter(order=order,
-                                                     flight_date=flight['flight_date'],
-                                                     flight_type=flight['flight_type']
-                                                     )
-                if possible_fl.count():
-                    continue
-
-                new_fl = Flights.objects.create(owner=order.owner,
-                                                flight_time=flight['flight_time'],
-                                                flight_date=flight['flight_date'],
-                                                flight_type=flight['flight_type'],
-                                                remote_record_id=flight['flight_id'],
-                                                order=order,
-                                                status='payed')
+            create_flight_by_response(response, order)
 
     else:
-        logger.error(f'Ошибка вызова сервиса 1с при подтверждении заказа {order_id=} {order.id=}')
+        logger.error(f"Ошибка вызова сервиса 1с при подтверждении заказа {order_id=} {order.id=}, описание: {response['description']}")
 
     return redirect('flights')
 

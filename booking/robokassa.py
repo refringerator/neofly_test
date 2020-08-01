@@ -71,19 +71,10 @@ def robokassa_check_crc(request, url_type):
                                                  order=order)
 
         elif order.type == 'buy_tariff':
-            booked_flight = json.loads(response['description'])
-            flight_id = booked_flight['flight_id']
-            possible_flight = Flights.objects.filter(order=order, remote_record_id=flight_id)
-            if not possible_flight.count():
-                fl = Flights.objects.create(owner=order.owner,
-                                            flight_time=booked_flight['flight_time'],
-                                            flight_date=booked_flight['flight_date'],
-                                            flight_type=booked_flight['КR'],
-                                            remote_record_id=booked_flight['flight_id'],
-                                            order=order,
-                                            status='payed',
-                                            flight_data=json.dumps(booked_flight['details']))
+            from booking.utils import create_flight_by_response
+            create_flight_by_response(response, order)
+
 
     else:
-        print('error with 1c ws')
+        print(f"error with 1c ws: {response['description'] }")
 

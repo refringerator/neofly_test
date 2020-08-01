@@ -71,7 +71,7 @@ class Flights(models.Model):
     owner = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL, verbose_name="Клиент")
     order = models.ForeignKey(Order, null=True, on_delete=models.SET_NULL, verbose_name="Заказ")
     status = models.CharField(max_length=20, choices=FLIGHT_STATUS, null=True, verbose_name="Статус")
-    remote_record_id = models.CharField(max_length=40, verbose_name="Идентификатор записи на полет 1С", null=True)
+    remote_record_id = models.CharField(max_length=40, verbose_name="Идентификатор записи на полет 1С", null=True, unique=True)
     flight_data = models.TextField(verbose_name="Детали полета в JSON", null=True)
 
     def __str__(self):

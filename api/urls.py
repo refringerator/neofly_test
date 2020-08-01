@@ -9,6 +9,7 @@ urlpatterns = [
     path('users/<int:pk>', views.UserDetailView.as_view()),
     path('users/<str:phone>', views.UserDetailView.as_view()),
 
+    path('flights/', views.FlightListView.as_view()),
     path('flights/<int:pk>', views.FlightDetailView.as_view()),
     path('flights/<str:remote_record_id>', views.FlightDetailView.as_view()),
 

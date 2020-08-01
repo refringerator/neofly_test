@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from datetime import timedelta
+import json
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -12,6 +13,8 @@ from requests.auth import HTTPBasicAuth
 import zeep
 from zeep.transports import Transport
 from zeep.wsse.username import UsernameToken
+
+from booking.models import Flights
 
 
 def init_soap_client():
@@ -243,3 +246,18 @@ def get_month_name(month_name):
          }
 
     return d.get(month_name, month_name)
+
+
+def create_flight_by_response(response, order):
+    booked_flight = json.loads(response['description'])[0]  # бред в 1с
+    flight_id = booked_flight['flight_id']
+    possible_flight = Flights.objects.filter(order=order, remote_record_id=flight_id)
+    if not possible_flight.count():
+        fl = Flights.objects.create(owner=order.owner,
+                                    flight_time=booked_flight['flight_time'],
+                                    flight_date=booked_flight['flight_date'],
+                                    flight_type=booked_flight['flight_type'],
+                                    remote_record_id=booked_flight['flight_id'],
+                                    order=order,
+                                    status='payed',
+                                    flight_data=json.dumps(booked_flight['details']))

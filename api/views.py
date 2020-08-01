@@ -73,6 +73,21 @@ class CertificateView(APIView):
         return Response(serializer.data)
 
 
+class FlightListView(APIView):
+    def get(self, request):
+        items = Flights.objects.all()
+        serializer = FlightSerializer(items, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = FlightSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class FlightDetailView(APIView):
 
     def get(self, request, pk=None, remote_record_id=None):
@@ -83,32 +98,32 @@ class FlightDetailView(APIView):
         serializer = FlightSerializer(item)
         return Response(serializer.data)
 
-    # def put(self, request, pk=None, remote_record_id=None):
-    #     if pk:
-    #         item = get_object_or_404(Flights, pk=pk)
-    #     else:
-    #         item = get_object_or_404(Flights, remote_record_id=remote_record_id)
-    #
-    #     serializer = FlightSerializer(instance=item, data=request.data, partial=True)
-    #
-    #     if serializer.is_valid(raise_exception=True):
-    #         serializer.save()
-    #
-    #     return Response(serializer.data)
+    def put(self, request, pk=None, remote_record_id=None):
+        if pk:
+            item = get_object_or_404(Flights, pk=pk)
+        else:
+            item = get_object_or_404(Flights, remote_record_id=remote_record_id)
 
-    def post(self, request, remote_record_id):
-        is_used = request.data.get('is_used')
-        flight_date = request.data.get('flight_date')
-        status = request.data.get('status')
+        serializer = FlightSerializer(instance=item, data=request.data, partial=True)
 
-        items = Flights.objects.filter(remote_record_id=remote_record_id)
-        for item in items:
-            item.status = status
-            item.flight_date = flight_date
-            item.is_used = is_used
-            item.save()
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
 
-        return Response({'done': True})
+        return Response(serializer.data)
+
+
+        # is_used = request.data.get('is_used')
+        # flight_date = request.data.get('flight_date')
+        # status = request.data.get('status')
+        #
+        # items = Flights.objects.filter(remote_record_id=remote_record_id)
+        # for item in items:
+        #     item.status = status
+        #     item.flight_date = flight_date
+        #     item.is_used = is_used
+        #     item.save()
+        #
+        # return Response({'done': True})
 
 
 def clear_cache(request, iso_date_time):

@@ -37,12 +37,19 @@ class CertificateSerializer(serializers.ModelSerializer):
 class FlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flights
-        fields = ['is_used', 'flight_date', 'status']
+        fields = ['is_used', 'flight_date', 'status', 'flight_time',
+                  'flight_data', 'owner', 'status', 'remote_record_id']
+
+    # def create(self, instance, validated_data):
+    #     return Flights.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         instance.is_used = validated_data.get('is_used', instance.is_used)
         instance.flight_date = validated_data.get('flight_date', instance.flight_date)
         instance.status = validated_data.get('status', instance.status)
+        instance.flight_time = validated_data.get('flight_time', instance.flight_time)
+        instance.flight_data = validated_data.get('flight_data', instance.flight_data)
+        instance.remote_record_id = validated_data.get('remote_record_id', instance.remote_record_id)
 
         instance.save()
         return instance
