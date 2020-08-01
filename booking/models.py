@@ -60,7 +60,7 @@ class Flights(models.Model):
         ('flied', 'Отлетан'),
         ('payed', 'Оплачен'),
         ('canceled', 'Отменен'),
-        ('new', 'ОжидаетОплаты'),
+        ('new', 'Ожидает оплаты'),
     )
 
     flight_time = models.DecimalField(max_digits=3, decimal_places=0, verbose_name="Длительность полета")
@@ -72,6 +72,7 @@ class Flights(models.Model):
     order = models.ForeignKey(Order, null=True, on_delete=models.SET_NULL, verbose_name="Заказ")
     status = models.CharField(max_length=20, choices=FLIGHT_STATUS, null=True, verbose_name="Статус")
     remote_record_id = models.CharField(max_length=40, verbose_name="Идентификатор записи на полет 1С", null=True)
+    flight_data = models.TextField(verbose_name="Детали полета в JSON", null=True)
 
     def __str__(self):
         return f"#{self.id} {self.flight_type} {self.flight_time} min"

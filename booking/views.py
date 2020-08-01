@@ -2,7 +2,6 @@ import calendar
 from datetime import datetime
 import logging
 
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -27,7 +26,6 @@ def index(request):
 
 
 def date_selection(request, year=None, month=None):
-
     date_in_month, prev_month_unavailable, next_month_unavailable = get_available_date(year, month)
     dates = available_dates_in_month(date_in_month, get_user_id(request))
 
@@ -88,6 +86,10 @@ def time_selection(request, year=None, month=None, day=None):
 
 
 def payment_method_selection(request, time=None):
+    """
+    Страница подбора подходящего тарифа, полетных минут и способа оплаты
+    Оплатить можно по тарифу, сертификатами или с депозита
+    """
     try:
         date = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S')
     except ValueError:
@@ -124,6 +126,9 @@ def payment_method_selection(request, time=None):
 
 
 def buy_certificate(request):
+    """
+    Страница покупки сертификатов
+    """
     certs = get_available_certificate_types(user_id=get_user_id(request))
     head, rows = make_cert_table(certs)
 
@@ -136,6 +141,11 @@ def buy_certificate(request):
 
 
 def order_confirmation(request):
+    """
+    Модальное окошко с кнопкой подтверждения - перехода на страницу платежной системы
+    Вызвается для покупки сертификатов и полетного времени по тарифу
+    Покупка депозита пока не предполагается
+    """
     if not request.user.is_authenticated:
         request.session['order'] = request.POST['order']
         request.session['order_type'] = request.POST.get('order_type')
@@ -219,6 +229,10 @@ def order_confirmation(request):
 
 
 def order_confirmation_without_payment(request, order_id):
+    """
+    Модальное окошко подтверждения записи на полет без оплаты
+        происходит списание депозита или введеных сертификатов
+    """
     if not request.user.is_authenticated:
         return render(request, 'lk/modal_login_required.html', context={})
 
@@ -268,6 +282,12 @@ def order_confirmation_without_payment(request, order_id):
 
 
 def success_payment(request, url_type):
+    """
+    Результат оплаты заказа - переход с платежной системы
+    Деграется
+      1. Платежной системой несколько раз
+      2. Перенаправляется пользователь после оплаты
+    """
     logger.info(f'Результат подтверждения оплаты: {url_type=} {request.user=}')
 
     # Ошибка оплаты, перенаправляем домой
@@ -301,6 +321,9 @@ def success_payment(request, url_type):
 
 @require_POST
 def check_cert(request):
+    """
+    Вьюха для проверки действительности сертификата
+    """
     one_bad_reason = 'Данный сертификат не действвителен.<br>' \
                      'Пожалуйста, введите другой номер сертификата или обратитесь в службу поддержки.'
 

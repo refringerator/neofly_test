@@ -1,17 +1,24 @@
+# TODO Вынести работу с сервисом 1с в отдельный модуль
+
 from collections import defaultdict
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
-import zeep
 from django.urls import reverse
+
 from requests import Session
 from requests.auth import HTTPBasicAuth
+import zeep
 from zeep.transports import Transport
 from zeep.wsse.username import UsernameToken
 
 
 def init_soap_client():
+    """
+    Инициализация SOAP клиента
+    Вроде как, установка соединения и получение WSDL-схемы
+    """
     session = Session()
     session.auth = HTTPBasicAuth(settings.WS_PROXY_LOGIN, settings.WS_PROXY_PASS)
     session.verify = not settings.WS_IGNORE_SSL
@@ -168,12 +175,10 @@ def create_order(user_id, order_type, data, booking_date):
 
 
 def update_user_info(phone_number, user_id):
+    """Обновление данных пользователя по данным 1с"""
     client = init_soap_client()
     res = client.service.getUserInfo(PhoneNumber=phone_number, UserId=user_id)
     if res.status == 1:
-        # if res.lastName == 'Ф' or res.lastName == 'И':
-        #     return
-
         user_model = get_user_model()
         user = user_model.objects.filter(id=user_id)[0]
         if user:
@@ -187,8 +192,10 @@ def update_user_info(phone_number, user_id):
 
 
 def confirm_order(invoice_id, total, user_id, order_id):
+    """Подтверждение заказа"""
     client = init_soap_client()
-    res = client.service.confirmOrder(invoiceId=invoice_id, UserId=user_id,
+    res = client.service.confirmOrder(invoiceId=invoice_id,
+                                      UserId=user_id,
                                       total=total,
                                       orderId=order_id)
     return res
@@ -201,6 +208,10 @@ def check_certificate(cert_number, user_id):
 
 
 def get_submenu(kind):
+    """
+    Получение списка элементов подменюшки
+    Состав зависит от текущего положения: личный кабинет или бронирование полета
+    """
     submenu = []
     if kind == 'flight':
         submenu.append({'name': 'Запись на полет', 'url': reverse('date_selection')})
@@ -216,6 +227,7 @@ def get_submenu(kind):
 
 
 def get_month_name(month_name):
+    """Получение названия месяца на русском языке"""
     d = {'January': 'Январь',
          'February': 'Февраль',
          'March': 'Март',
